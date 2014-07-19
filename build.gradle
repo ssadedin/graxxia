@@ -14,7 +14,7 @@ configurations {
 }
 
 dependencies {
-     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '2.1.0'
+     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '2.3.4'
      groovy group: 'org.apache.ivy', name:'ivy', version:'2.2.0' 
      groovy 'com.lowagie:itext:2.1.7'
      groovy 'org.apache.commons:commons-math3:3.0'
