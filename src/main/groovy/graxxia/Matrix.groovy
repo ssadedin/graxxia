@@ -689,30 +689,27 @@ class Matrix extends Expando implements Iterable {
         format.minimumFractionDigits = 0
         format.maximumFractionDigits = 6
         
+        int rowCount = 0
+        def printRow = { row ->
+           List cells = (row as List)
+           if(this.properties) {
+               cells = this.properties.collect { it.value[rowCount] } + cells
+           }
+           ((rowCount++) + ":").padRight(6) + cells.collect { value ->
+               if(!(value instanceof Double))
+                   return String.valueOf(value)
+                       
+               (value < 0.0001d && value !=0) ? String.format("%1.6e",value) : format.format(value)
+           }.join(",\t")  
+        }
+		
         if(matrix.rowDimension<DISPLAY_ROWS) {
-            int rowCount = 0
             return "${matrix.rowDimension}x${matrix.columnDimension} Matrix:\n"+ 
                 headers + 
-                matrix.data.collect { row -> 
-                (rowCount++) + ":\t" + (row as List).join(",\t") 
-            }.join("\n")
+                matrix.data.collect(printRow).join("\n")
         }
         else {
             int omitted = matrix.rowDimension-DISPLAY_ROWS
-            int rowCount = 0
-            
-            def printRow = { row ->
-               List cells = (row as List)
-               if(this.properties) {
-                   cells = this.properties.collect { it.value[rowCount] } + cells
-               }
-               ((rowCount++) + ":").padRight(6) + cells.collect { value ->
-                   if(!(value instanceof Double))
-                       return String.valueOf(value)
-                       
-                   (value < 0.0001d && value !=0) ? String.format("%1.6e",value) : format.format(value)
-               }.join(",\t")  
-            }
             
             String value = "${matrix.rowDimension}x${matrix.columnDimension} Matrix:\n"+ 
                 headers + 
