@@ -678,9 +678,11 @@ class Matrix extends Expando implements Iterable {
        
     String toString() {
         
+		Map nnProps = this.properties.grep { !this.@names.contains(it.key) }.collectEntries()
+        
         def headerCells = this.@names
         if(this.properties) {
-            headerCells = this.properties.collect { it.key } + headerCells
+            headerCells = nnProps.collect { it.key } + headerCells
         }
         
         String headers = headerCells ? (" " * 6) + headerCells.join("\t") + "\n" : ""
@@ -688,12 +690,12 @@ class Matrix extends Expando implements Iterable {
         DecimalFormat format = new DecimalFormat()
         format.minimumFractionDigits = 0
         format.maximumFractionDigits = 6
-        
+		
         int rowCount = 0
         def printRow = { row ->
            List cells = (row as List)
            if(this.properties) {
-               cells = this.properties.collect { it.value[rowCount] } + cells
+               cells = nnProps.collect { it.value[rowCount] } + cells
            }
            ((rowCount++) + ":").padRight(6) + cells.collect { value ->
                if(!(value instanceof Double))
