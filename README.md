@@ -66,7 +66,7 @@ A whole column is accessed by omitting the first index:
     groovy:000> m[][1]
     ===> [3.0,6.0,4.0]
 
-Graxxia's Matrix class returns a special MatrixColumn object for column access. You can treat it as a List<Double>, but it is actually working under the covers to reflect accessors back into the original Matrix from which the column came. That is, you are not looking at a copy of the data, you are looking at the actual data. No copy is made when you access by row, even thought the data is stored natively in row format.
+Graxxia's Matrix class returns a special MatrixColumn object for column access. You can treat it as a List<Double>, but it is actually working under the covers to reflect accessors back into the original Matrix from which the column came. That is, you are not looking at a copy of the data, you are looking at the actual data. No copy is made when you access by column, even thought the data is stored natively in row format.
 
 Like R's data frames, Graxxia lets you give columns names:
 
