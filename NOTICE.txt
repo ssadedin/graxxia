@@ -1,0 +1,3 @@
+Graxxia, Groovy Maths Utils
+Copyright 2014, Simon Sadedin and Contributing Authors
+
