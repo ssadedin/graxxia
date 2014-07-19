@@ -1,7 +1,9 @@
 apply plugin: 'groovy'
 
-VERSION="0.0.1"
-STAGE="build/stage/graxxia-$VERSION"
+project.ext {
+  VERSION="0.0.1"
+  STAGE="build/stage/graxxia-$VERSION"
+}
 
 repositories {
     mavenCentral()
@@ -45,3 +47,8 @@ task doc << {
         source = 'src/main/groovy'
     }
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.4'
+}
+
