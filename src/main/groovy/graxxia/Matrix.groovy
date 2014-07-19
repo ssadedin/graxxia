@@ -426,14 +426,20 @@ class Matrix extends Expando implements Iterable {
      * 
      * @return  Matrix for which the closure c returns a non-false value
      */
-    @CompileStatic
     Matrix grep(Closure c) {
         
         List<Number> keepRows = this.findIndexValues(c)
 
 		double [][] submatrix = this.subsetRows((Iterable<Number>)keepRows)
 		
-        return new Matrix(new Array2DRowRealMatrix(submatrix))
+        Matrix result = new Matrix(new Array2DRowRealMatrix(submatrix))
+		if(!this.properties.isEmpty()) {
+			this.properties.each { String key, Object value ->
+				result.setProperty(key, value[keepRows])
+			}
+		}
+		
+		return result.describeNames(this.@names)
     }    
     
     /**
@@ -458,8 +464,9 @@ class Matrix extends Expando implements Iterable {
         if(c.maximumNumberOfParameters == 3) {
             result = transformWithIndices(c)
         }
-        if(names)
-            result.names = this.names
+        if(this.@names)
+            result.describeNames(this.names)
+			
         return result
     }
     
@@ -719,11 +726,19 @@ class Matrix extends Expando implements Iterable {
         }
     }
     
+    Matrix describeNames(List<String> names) {
+        this.@names = names
+		names.eachWithIndex { String name, int index ->
+			this[name] = this.col(index)
+		}		
+		return this
+	}
+	
     void setColumnNames(List<String> names) {
-        this.names = names
+		this.describeNames(names)
     }
     
     void setNames(List<String> names) {
-        this.names = names
+        this.describeNames(names)
     }
 }

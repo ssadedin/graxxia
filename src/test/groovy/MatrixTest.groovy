@@ -209,7 +209,7 @@ class MatrixTest {
     @Test
     void testNonNumericColumns() {
         Matrix m = new Matrix([[2,5,3,3,4], [5,6,7,2,4]])
-        m.names = ["legs","toes","feet","ears","eyes"]
+        m.@names = ["legs","toes","feet","ears","eyes"]
         m.animal = ["frog","dog"]
         
 //        m.grep { animal == "frog" && legs > 2 }
@@ -233,5 +233,8 @@ class MatrixTest {
         m.eachRow { animals.add(animal) }
         
         assert animals == ["frog", "dog"]
+		
+		assert m.grep { legs > 3 }.animal == ["dog"]
+		
     }
 }

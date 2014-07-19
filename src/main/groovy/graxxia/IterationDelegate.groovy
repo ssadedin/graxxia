@@ -20,6 +20,13 @@ class IterationDelegate {
     }
     
 	def propertyMissing(String name) {
-		host[name][row]
+		def column = host.getProperty(name)
+		if(column == null) {
+			if(name in host.@names) {
+				host.setProperty(name, host.col(host.@names.indexOf(name)))
+				column = host[name]
+			}
+		}
+		return column[row]
 	}
 }
