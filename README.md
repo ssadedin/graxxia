@@ -1,9 +1,13 @@
 Graxxia
 =======
 
-Graxxia is an experiment to see how easy it is to bend Groovy to make it usable for the task of data analysis similar to languages such as R, Julia, etc, and also to libraries such as Pandas for Python.
+Graxxia is a library adds data analysis features to Groovy, similar to languages such as
+R, Julia, etc, and also to libraries such as Pandas for Python.
 
-It should be emphasised that there is nearly nothing in Graxxia itself that is not just a wrapper around other existing libraries. For example Matrix support all comes from Apache commons-math, parsing of CSV and TSV (tab separated) files comes from OpenCSV and GroovyCSV, etc.
+It should be emphasised that there is nearly nothing in Graxxia itself that is
+not just a wrapper around other existing libraries. For example Matrix support
+all comes from Apache commons-math, parsing of CSV and TSV (tab separated) files
+comes from OpenCSV and GroovyCSV, etc.
 
 What can you do with Graxxia? You can get just a few interesting things:
 
@@ -12,7 +16,11 @@ What can you do with Graxxia? You can get just a few interesting things:
   *  Simple statistics computations
   *  A prototype (very alpha) imitation of the linear modelling expression syntax in R (y ~ x + z, etc)
 
-Obviously this is not even remotely comparable to what is available for data analysis in the other languages mentioned above, which is why I refer to this project as an "experiment". I hope perhaps this can demonstrate however that Groovy can do quite well at this task and perhaps inspire some others to think about whether extension of this project or a more serious separate attempt would be a useful endeavor.
+Obviously this is not even remotely comparable to what is available for data
+analysis in the other languages mentioned above. However these classes can
+make doing simple data analysis in Groovy quite powerful and in some cases
+compares very favorably to doing it in other languages. Combined with the
+Groovy Shell, it becomes quite useful for interactive data analysis.
 
 Building and Using It
 ========
@@ -32,6 +40,16 @@ Put it in your classpath. A nice way to play around with it is with groovysh. So
 
     groovysh -cp build/libs/graxxia.jar 
 
+
+Note: this build process builds a fully self-contained jar file that contains
+all dependencies (sometimes called a 'fat' jar). In rare situations these could 
+conflict with other libraries already in your class path.
+
+Note: if you encounter problems, please check that your Groovy version matches
+that specified in the build.gradle file. Graxxia should work with versions of
+Groovy > 2.2, but problems can occur if your version doesn't match (this can
+happen even between point releases of the same major version, unforutnately).
+
 Examples
 ==========
 
@@ -47,7 +65,11 @@ Now make a simple Matrix:
     1:	8.0,	6.0,	2.0
     2:	10.0,	4.0,	3.0
 
-So straight away you can see, there are some conversions between arrays, and lists of doubles that are built in for you. In general you can just take any 2 dimensional array / list combination and turn it into a Matrix. In fact, all Graxxia cares about is that they are Iterable, so you can even feed a Matrix dynamically if you like.
+So straight away you can see, there are some conversions between arrays, and
+lists of doubles that are built in for you. In general you can just take any 2
+dimensional array / list combination and turn it into a Matrix. In fact, all
+Graxxia cares about is that they are Iterable, so you can even feed a Matrix
+dynamically if you like.
 
 We can access the elements, as you would expect, via indexing with row and column respectively:
 
