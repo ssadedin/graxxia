@@ -12,8 +12,12 @@ package graxxia
 
 import com.xlson.groovycsv.CsvParser;
 import com.xlson.groovycsv.CsvIterator;
+import com.xlson.groovycsv.PropertyMapper;
+
 import groovy.transform.CompileStatic;
+
 import java.io.Reader;
+import java.util.zip.GZIPInputStream
 
 /**
  * A convenience wrapper around Groovy-CSV (which is
@@ -53,11 +57,11 @@ class TSV implements Iterable {
     Closure reader
     
     Map options
-	
-	boolean raw = false
     
     TSV(Map options=[:], String fileName) {
-        this.reader =  { new File(fileName).newReader() }
+        this.reader =  { 
+            fileName.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader() 
+        }
         this.options = options
         if(this.options.containsKey('columnNames') && !this.options.containsKey('readFirstLine'))
             this.options.readFirstLine = true
@@ -137,7 +141,7 @@ class TSV implements Iterable {
                 
                 line.values = TSV.this.convertColumns(line.values, columnTypes)
                 
-                return raw ? line.values : line
+                return line
             }
             
             void remove() {
@@ -165,9 +169,13 @@ class TSV implements Iterable {
         }
         return newValues
     }
-	
-	static Iterable parse(Closure c = null) {
+    
+	static Iterator parse(Closure c = null) {
 		Reader r = new InputStreamReader(System.in)
+        parse(r,c)
+	}
+    
+	static Iterator parse(Reader r, Closure c = null) {
 		if(c != null) {
 			for(line in CsvParser.parseCsv(r)) {
 				c(line)
@@ -176,15 +184,38 @@ class TSV implements Iterable {
 		else {
 			return CsvParser.parseCsv(r)
 		}
-	}
+	}    
+    
+    void filter(Closure c) {
+        filter(null, c)
+    }
     
     /**
-     * Read the given file and then write it out to standard output
-     * after passing to the given closure, allowing modification
+     * Invokes the given closure for each line in this file and then prints
+     * only those lines for which it returns true to output.
+     * If the 'quote' option is set, values are double quoted.
      * @return
      */
-    static filter(Closure c) {
-        
+    void filter(Writer writer, Closure c) {
+        if(writer==null)
+            writer = new PrintWriter(System.out)
+        def columns = null
+        for(PropertyMapper line in this) {
+            if(!columns) {
+                columns = line.columns*.key
+                def out = options.quote ? 
+                        columns.collect { '"' + it + '"'}.join(options.separator) 
+                    : 
+                        columns.join(options.separator)
+                writer.println(out)
+            }
+            if(c(line)==true) {
+                if(options.quote)
+                    writer.println columns.collect { (options.quoteall || (line[it] instanceof String)) ? ('"' + line[it] + '"') : line[it] }.join(options.separator)
+                else
+                    writer.println columns.collect { line[it] }.join(options.separator)
+            }
+        }
     }
 }
 
