@@ -1,4 +1,5 @@
 package graxxia;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,12 +9,12 @@ import java.util.Arrays;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 /**
- * An efficient method to calculate percentiles of coverage values
+ * An efficient method to calculate percentiles of integer values
  * that doesn't require holding them all in memory or sorting them.
  * <p>
  * It relies on some limitations regarding coverage values:
  * <li>They are integers
- * <li>We usually know the approximate range, and don't care about it
+ * <li>We assume bounds on the range, and don't care about it
  *     above a certain value. For example, we are unlikely to observe
  *     values above 1000 and those that do are unlikely to affect the
  *     50'th percentile.
@@ -46,6 +47,13 @@ public class IntegerStats extends SummaryStatistics {
         }
     }
      
+    public IntegerStats(int maxPercentileValue, Iterable covValues) {
+        values = new int[maxPercentileValue];
+        for(Object obj : covValues) {
+            this.leftShift(obj);
+        }
+    }
+    
     void leftShift(Object obj) {
         if(obj instanceof Integer) {
             addValue((Integer)obj);
@@ -84,7 +92,7 @@ public class IntegerStats extends SummaryStatistics {
     int getPercentile(int percentile) {
         int observationsPassed = 0;
         int lowerValue = -1;
-        final int medianIndex = total / (100/percentile);
+        final int medianIndex = (int)((float)total / (100f/(float)percentile));
         for(int i=0; i<values.length; ++i) {
             observationsPassed += values[i];
             if(observationsPassed >= medianIndex) {
