@@ -10,7 +10,6 @@
  */
 package graxxia
 import groovy.transform.CompileStatic;
-
 import java.text.ParseException;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -24,7 +23,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  * for various collections and iterables. A special class of methods supports efficient
  * creation of statistics for defined ranges of integers (eg: Coverage Depth values). The 
  * motivation of it is to be able to calculate the median of coverage depth values efficiently
- * without storing the entire set in memory. See {@link CoverageStats} for more information.
+ * without storing the entire set in memory. See {@link IntegerStats} for more information.
  * <p>
  * The most basic method takes any Iterable and turns it into a SummaryStatistics object:
  * <pre>
@@ -134,16 +133,10 @@ class Stats extends DescriptiveStatistics {
      * @return
      */
     @CompileStatic
-    static Stats from(Iterable values, Closure c=null) {
+    static Stats from(Iterable values, Closure c) {
         Stats s = new Stats()
-        boolean withIndex = c == null ? false : c.maximumNumberOfParameters > 1
-		
-		int index = 0
-		Iterator iter = values.iterator()
-		while(iter.hasNext()) {
-	      Object rawValue = iter.next()
-		  
-//        values.eachWithIndex { Object rawValue, int index -> // caused VerifyError, Groovy 2.1
+        boolean withIndex = c.maximumNumberOfParameters > 1
+        values.eachWithIndex { rawValue, index ->
               if(c == null) {
                   double value = (double) (rawValue instanceof Number ? rawValue : Double.parseDouble(String.valueOf(rawValue)))
                   s.addValue(value)
@@ -157,7 +150,6 @@ class Stats extends DescriptiveStatistics {
                           s.addValue(((Number)value).toDouble())
                   }
               } 
-			  ++index
         }
         return s
     }
@@ -227,14 +219,18 @@ class Stats extends DescriptiveStatistics {
         summary { i.next() }
     }
     
-    static Double mean(Closure c) {
+    static Double mean(double... values) {
+        summary(values).mean
+    }
+	
+     static Double mean(Closure c) {
         summary(c).mean
     }
     
     @CompileStatic
-    static SummaryStatistics summary(double [] values) {
+    static SummaryStatistics summary(double... values) {
         int i=0;
-        summary { values[(int)i++] }
+        summary { values[(int)(i++)] }
     }
     
     /**
@@ -264,12 +260,12 @@ class Stats extends DescriptiveStatistics {
     }
      
     /**
-     * Return a CoverageStats object by reading lines from the
+     * Return a IntegerStats object by reading lines from the
      * given input stream until no more lines are left.
      * 
      * @param max   See #percentile(max,Closure)
      * @param i     input stream
-     * @return  a CoverageStats object
+     * @return  a IntegerStats object
      */
     @CompileStatic
     static percentile(int max, InputStream i) {
@@ -281,7 +277,7 @@ class Stats extends DescriptiveStatistics {
     }
     
     /**
-     * Calculate Percentile object by accepting integer values from
+     * Calculate Percentile object by accepting values from
      * the given closure until it either:
      * 
      * <li>returns null
@@ -331,6 +327,10 @@ class Stats extends DescriptiveStatistics {
         return p
     }
     
+    static SummaryStatistics summary(Closure c) {
+        summary(c,null)
+    }
+    
     /**
      * Return a SummaryStatistics object obtained by executing the
      * given closure repeatedly until it either 
@@ -339,34 +339,43 @@ class Stats extends DescriptiveStatistics {
      * <li>throws NoSuchElementException
      * <li>throws ArrayIndexOutOfBounds exception
      * 
-     * @param c
+     * @param c1 the closure that returns values
+     * @param c2 an optional closure that filters the results. 
+     *           If it accepts a single parameter then only the 
+     *           value is passed, if it accepts 2 parameters then
+     *           the index of the value is passed as well
+     * 
      * @return {@link SummaryStatistics} object
      */
     @CompileStatic
-    static SummaryStatistics summary(Closure c) {
+    static SummaryStatistics summary(Closure c1, Closure c2) {
         SummaryStatistics s = new SummaryStatistics()
+        int i=0
         try {
-            def value = c()
+            def value = c1()
             while(value != null) {
-                if(value instanceof Double) {
-                    s.addValue((Double)value)
+                if(c2 == null || c2(value,i)) {
+                    if(value instanceof Double) {
+                        s.addValue((Double)value)
+                    }
+                    else
+                    if(value instanceof Float) {
+                        s.addValue(((Float)value).toDouble())
+                    }            
+                    else
+                    if(value instanceof Integer) {
+                        s.addValue(((Integer)value).toDouble())
+                    }                    
+                    else
+                    if(value instanceof String) {
+                        s.addValue(((String)value).toDouble())
+                    }
+                    else {
+                        s.addValue(String.valueOf(value).toDouble())
+                    }
                 }
-                else
-                if(value instanceof Float) {
-                    s.addValue(((Float)value).toDouble())
-                }            
-                else
-                if(value instanceof Integer) {
-                    s.addValue(((Integer)value).toDouble())
-                }                    
-                else
-                if(value instanceof String) {
-                    s.addValue(((String)value).toDouble())
-                }
-                else {
-                    s.addValue(String.valueOf(value).toDouble())
-                }
-                value = c()
+                value = c1()
+                ++i
             }
         }
         catch(NoSuchElementException e) {
