@@ -20,8 +20,6 @@ import groovy.transform.CompileStatic;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix;
-import org.codehaus.groovy.runtime.InvokerHelper;
-import org.codehaus.groovy.runtime.callsite.BooleanClosureWrapper;
 
 /**
  * Wraps an Apache-Commons-Math matrix of double values with a 
@@ -31,7 +29,7 @@ import org.codehaus.groovy.runtime.callsite.BooleanClosureWrapper;
  * Groovy-enhanced versions.
  * <p>
  * The most basic enhancements come in the form of random access operators 
- * that allow the Matrix class to be referenced using square-bracket notation:
+ * that allowthe Matrix class to be referenced using square-bracket notation:
  * <pre>
  * Matrix m = new Matrix(2,2,[1,2,3,4])
  * assert m[0][0] == 2
@@ -72,7 +70,7 @@ class Matrix extends Expando implements Iterable {
     static { 
 		
 //		println "Setting Matrix meta class properties ...."
-        (double[][]).metaClass.toMatrix = { new Matrix(delegate) }
+        double[][].metaClass.toMatrix = { new Matrix(delegate) }
         
         def originalMethod = double[][].metaClass.getMetaMethod("asType", Class)
         double[][].metaClass.asType = { arg -> arg == Matrix.class ? delegate.toMatrix() : originalMethod(arg)}
@@ -168,6 +166,7 @@ class Matrix extends Expando implements Iterable {
     public Matrix(Array2DRowRealMatrix m) {
         matrix = m
     }
+
      
     @CompileStatic
     MatrixColumn col(int n) {
@@ -217,7 +216,12 @@ class Matrix extends Expando implements Iterable {
             if(l.size() == 0) // Seems to happen with m[][2] type syntax
                 return getColumns()
             else {
-                return subsetRows(l)
+                double [][] submatrix = subsetRows(l)
+                Matrix result = new Matrix(new Array2DRowRealMatrix(submatrix))
+                result.@names = this.@names
+                if(!this.properties.isEmpty()) 
+                    this.transferPropertiesToRows(result, l)
+                return result
             }
         }
         else
@@ -353,21 +357,32 @@ class Matrix extends Expando implements Iterable {
      * 
      * @return  Matrix for which the closure c returns a non-false value
      */
+    @CompileStatic
     Matrix grep(Closure c) {
         
         List<Number> keepRows = this.findIndexValues(c)
 
 		double [][] submatrix = this.subsetRows((Iterable<Number>)keepRows)
 		
-        Matrix result = new Matrix(new Array2DRowRealMatrix(submatrix))
-		if(!this.properties.isEmpty()) {
-			this.properties.each { String key, Object value ->
-				result.setProperty(key, value[keepRows])
-			}
-		}
-		
-		return result.describeNames(this.@names)
+        def result = new Matrix(new Array2DRowRealMatrix(submatrix))
+        result.@names = this.@names
+        if(!this.properties.isEmpty()) 
+            this.transferPropertiesToRows(result, keepRows)
+        return result
     }    
+    
+    private void transferPropertiesToRows(Matrix result, List<Number> indices = null) {
+        if(indices != null) {
+            this.properties.each {  String key, Iterable value ->
+                result[key] = value[indices]
+            }
+        }
+        else {
+            this.properties.each {  String key, Iterable value ->
+                result[key] = value as List
+            }
+        }
+    }
     
     /**
      * Transforms a matrix by processing each element through the given
@@ -391,9 +406,12 @@ class Matrix extends Expando implements Iterable {
         if(c.maximumNumberOfParameters == 3) {
             result = transformWithIndices(c)
         }
-        if(this.@names)
-            result.describeNames(this.names)
-			
+        if(names)
+            result.names = this.names
+            
+        if(!this.properties.isEmpty()) 
+            this.transferPropertiesToRows(result)
+            
         return result
     }
     
@@ -557,6 +575,12 @@ class Matrix extends Expando implements Iterable {
         new Matrix(this.matrix.transpose())
     }
     
+    Matrix div(Matrix m) {
+        this.transform { value, i, j ->
+            value / m[i][j]
+        }
+    }
+    
     void save(String fileName) {
         new File(fileName).withWriter { w ->
             save(w)
@@ -578,7 +602,7 @@ class Matrix extends Expando implements Iterable {
     static Matrix load(String fileName) {
         List rows = new ArrayList(1024)
         
-        Reader r = new File(fileName).newReader()
+        Reader r = new FileReader(fileName)
         
         // Sniff the first line
         String firstLine = r.readLine()
@@ -588,15 +612,9 @@ class Matrix extends Expando implements Iterable {
         }
         else {
             r.close()
-            r = new File(fileName).newReader()
+            r = new FileReader(fileName)
         }
-		
-//		String testLine = r.readLine()
-		
-		
-		TSV tsv = new TSV(readFirstLine:true, r)
-		tsv.raw = true // don't bother wrapping values with property mappers
-        Matrix m = new Matrix(tsv)
+        Matrix m = new Matrix(new TSV(readFirstLine:true, r)*.values)
         if(names)
             m.@names = names
             
@@ -605,41 +623,46 @@ class Matrix extends Expando implements Iterable {
        
     String toString() {
         
-		Map nnProps = this.properties.grep { !this.@names.contains(it.key) }.collectEntries()
-        
         def headerCells = this.@names
         if(this.properties) {
-            headerCells = nnProps.collect { it.key } + headerCells
+            headerCells = this.properties.collect { it.key } + headerCells
         }
         
-        String headers = headerCells ? (" " * 6) + headerCells.join("\t") + "\n" : ""
+        int columnWidth = Math.max(10, headerCells ? headerCells*.size().max() : 0)
+        int rowNumWidth = 6
+        
+        String headers = headerCells ? (" " * rowNumWidth) + headerCells*.padRight(columnWidth).join(" ") + "\n" : ""
         
         DecimalFormat format = new DecimalFormat()
         format.minimumFractionDigits = 0
         format.maximumFractionDigits = 6
-		
+        
+       
         int rowCount = 0
         def printRow = { row ->
            List cells = (row as List)
            if(this.properties) {
-               cells = nnProps.collect { it.value[rowCount] } + cells
+               cells = this.properties.collect { it.value[rowCount] } + cells
            }
-           ((rowCount++) + ":").padRight(6) + cells.collect { value ->
+           def values = cells.collect { value ->
                if(!(value instanceof Double))
-                   return String.valueOf(value)
+                   return String.valueOf(value).padRight(columnWidth)
                        
-               (value < 0.0001d && value !=0) ? String.format("%1.6e",value) : format.format(value)
-           }.join(",\t")  
+               ((value < 0.0001d && value !=0 && value > -0.0001d) ? String.format("%1.6e",value) : format.format(value)).padRight(columnWidth)
+           }
+           
+           return ((rowCount++) + ":").padRight(rowNumWidth) + values.join(" ")  
         }
-		
+        
         if(matrix.rowDimension<DISPLAY_ROWS) {
             return "${matrix.rowDimension}x${matrix.columnDimension} Matrix:\n"+ 
                 headers + 
-                matrix.data.collect(printRow).join("\n")
+                matrix.data.collect { row -> 
+                    printRow(row)
+            }.join("\n")
         }
         else {
             int omitted = matrix.rowDimension-DISPLAY_ROWS
-            
             String value = "${matrix.rowDimension}x${matrix.columnDimension} Matrix:\n"+ 
                 headers + 
                 matrix.data[0..DISPLAY_ROWS/2].collect(printRow).join("\n")  
@@ -652,19 +675,11 @@ class Matrix extends Expando implements Iterable {
         }
     }
     
-    Matrix describeNames(List<String> names) {
-        this.@names = names
-		names.eachWithIndex { String name, int index ->
-			this[name] = this.col(index)
-		}		
-		return this
-	}
-	
     void setColumnNames(List<String> names) {
-		this.describeNames(names)
+        this.names = names
     }
     
     void setNames(List<String> names) {
-        this.describeNames(names)
+        this.names = names
     }
 }
