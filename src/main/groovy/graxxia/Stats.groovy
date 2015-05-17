@@ -133,9 +133,9 @@ class Stats extends DescriptiveStatistics {
      * @return
      */
     @CompileStatic
-    static Stats from(Iterable values, Closure c) {
+    static Stats from(Iterable values, Closure c=null) {
         Stats s = new Stats()
-        boolean withIndex = c.maximumNumberOfParameters > 1
+        boolean withIndex = c != null && c.maximumNumberOfParameters > 1
         values.eachWithIndex { rawValue, index ->
               if(c == null) {
                   double value = (double) (rawValue instanceof Number ? rawValue : Double.parseDouble(String.valueOf(rawValue)))

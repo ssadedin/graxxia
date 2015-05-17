@@ -9,7 +9,7 @@ class StatsTest {
     def x = new Stats()
     
     @Test
-    public void test() {
+    public void testConversion() {
         
         x << 4
         x << 7
@@ -17,9 +17,15 @@ class StatsTest {
         
         println x.mean
         
-        println Stats.from(["cat","dog","treehouse","farm"]) { it.size() }
+        assertEquals(6.333,x.mean, 0.05)
         
+        def s = Stats.from(["cat","dog","treehouse","farm"]) { it.size() }
+        println s
+        assertEquals 4.75, s.mean, 0.05
+        assertEquals 2.87, s.standardDeviation, 0.05
+         
         println Stats.from([5,4,2,9])
+        assertEquals 5.0, Stats.from([5,4,2,9]).mean, 0.05
     }
     
     @Test
@@ -28,12 +34,15 @@ class StatsTest {
         def values = [1, 5, 7, 8]
         Iterator i = values.iterator()
         
-        println Stats.mean { 
+        def m = Stats.mean { 
            i.next() 
         }
+        println m
+        assertEquals 5.25, m, 0.05
         
         println Stats.mean(values)
         println Stats.mean(values.iterator())
+        assertEquals 5.25d, Stats.mean(values.iterator()), 0.05d
     }
     
     @Test
@@ -59,13 +68,14 @@ class StatsTest {
     }
     
     @Test
-    void testPercentile() {
+    void testMidPercentile() {
         
         def values = [1, 5, 7, 8]
         Iterator i = values.iterator()
-         println Stats.percentile(200) {
+        def p50 = Stats.percentile(200) {
              i.next()
-         }.getPercentile(50)
+        }.getPercentile(50)
+        
+        assertEquals 6f, p50, 0.05
     }
-
 }
