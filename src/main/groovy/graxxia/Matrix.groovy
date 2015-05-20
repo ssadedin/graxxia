@@ -69,8 +69,8 @@ import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
 class Matrix extends Expando implements Iterable {
      
     static { 
-		
-//		println "Setting Matrix meta class properties ...."
+        
+//        println "Setting Matrix meta class properties ...."
         double[][].metaClass.toMatrix = { new Matrix(delegate) }
         
         def originalMethod = double[][].metaClass.getMetaMethod("asType", Class)
@@ -83,7 +83,7 @@ class Matrix extends Expando implements Iterable {
         Integer.metaClass.multiply = { arg -> arg instanceof Matrix ? arg.multiply(delegate) : originalMultiply(arg)}
     }
     
-	
+    
     /**
      * How many rows are displayed in toString() and other calls that format output
      */
@@ -91,31 +91,31 @@ class Matrix extends Expando implements Iterable {
     
     @Delegate
     Array2DRowRealMatrix matrix
-	
-	List<String> names = []
-	
+    
+    List<String> names = []
+    
     public Matrix(int rows, int columns) {
         matrix = new Array2DRowRealMatrix(rows, columns)
     }
     
     public Matrix(MatrixColumn... sourceColumns) {
-		this.initFromColumns(sourceColumns)
+        this.initFromColumns(sourceColumns)
     }
-	
+    
     @CompileStatic
-	private void initFromColumns(MatrixColumn[] sourceColumns) {
-		int rows = columns[0].size()
-		final int cols = columns.size()
+    private void initFromColumns(MatrixColumn[] sourceColumns) {
+        int rows = columns[0].size()
+        final int cols = columns.size()
         double[][] newData =  new double[rows][]
-		MatrixColumn [] columns = sourceColumns
-		for(int i=0; i<rows;++i) {
-			double [] row = newData[i]
-			for(int j=0; j<++cols;++j)
-				row[j] = (double)(columns[j].getDoubleAt(i))
-		}
-		matrix = new Array2DRowRealMatrix(newData,false)
-		this.names = columns.collect { MatrixColumn c -> c.name }
-	}
+        MatrixColumn [] columns = sourceColumns
+        for(int i=0; i<rows;++i) {
+            double [] row = newData[i]
+            for(int j=0; j<++cols;++j)
+                row[j] = (double)(columns[j].getDoubleAt(i))
+        }
+        matrix = new Array2DRowRealMatrix(newData,false)
+        this.names = columns.collect { MatrixColumn c -> c.name }
+    }
     
     public Matrix(Iterable<Iterable> rows, List<String> columnNames=null) {
         List data = new ArrayList(4096)
@@ -144,7 +144,7 @@ class Matrix extends Expando implements Iterable {
                 ++colIndex
             }
             ++rowIndex
-			data.add(rowNumericValues)
+            data.add(rowNumericValues)
         }
         
         matrix = new Array2DRowRealMatrix((double[][])data.toArray(), false)
@@ -163,11 +163,11 @@ class Matrix extends Expando implements Iterable {
     }
      
     public Matrix(int rows, int columns, List<Double> data) {
-		this.initFromList(rows,columns,data)
+        this.initFromList(rows,columns,data)
     }
-	
+    
     @CompileStatic
-	void initFromList(int rows, int columns, List<Double> data) {
+    void initFromList(int rows, int columns, List<Double> data) {
         matrix = new Array2DRowRealMatrix(rows, columns)
         int i=0
         for(int r=0; r<rows; ++r) {
@@ -175,14 +175,14 @@ class Matrix extends Expando implements Iterable {
                 matrix.dataRef[r][c] = (double)data[i++]
             }
         }
-	}
+    }
     
     public Matrix(int rows, int columns, double[] matrixData) {
-		this.initFromArray(rows, columns, matrixData)
+        this.initFromArray(rows, columns, matrixData)
     }
-	
+    
     @CompileStatic
-	private void initFromArray(int rows, int columns, double[] matrixData) {
+    private void initFromArray(int rows, int columns, double[] matrixData) {
         matrix = new Array2DRowRealMatrix(rows, columns)
         int i=0
         for(int r=0; r<rows; ++r) {
@@ -190,8 +190,8 @@ class Matrix extends Expando implements Iterable {
                 matrix.dataRef[r][c] = matrixData[++i]
             }
         }
-		
-	}
+        
+    }
       
     public Matrix(Array2DRowRealMatrix m) {
         matrix = m
@@ -218,20 +218,20 @@ class Matrix extends Expando implements Iterable {
         matrix.getRow(n)
     }
     
-	/**
-	 * Implementation of the [] operator. Adds several different behaviors:
-	 * <ul>
-	 *    <li>Plain old indexing returns a row: <code>m[4]</code> returns 5th row of matrix.
-	 *    <li>Double indexing returns a cell: <code>m[4][5]</code> returns 6th column of 4th row.
-	 *    <li>Empty index returns a column: <code>m[][6]</code> returns 7th column
-	 *    <li>List (or any iterable) index returns rows matching indices:
-	 *    </ul>
-	 * <pre>
-	 * Matrix m = new Matrix([1..80], 10, 8)
-	 * m[2..4] == [ [ 9..16 ], [17..24], [25..32] ]
-	 * @param n
-	 * @return
-	 */
+    /**
+     * Implementation of the [] operator. Adds several different behaviors:
+     * <ul>
+     *    <li>Plain old indexing returns a row: <code>m[4]</code> returns 5th row of matrix.
+     *    <li>Double indexing returns a cell: <code>m[4][5]</code> returns 6th column of 4th row.
+     *    <li>Empty index returns a column: <code>m[][6]</code> returns 7th column
+     *    <li>List (or any iterable) index returns rows matching indices:
+     *    </ul>
+     * <pre>
+     * Matrix m = new Matrix([1..80], 10, 8)
+     * m[2..4] == [ [ 9..16 ], [17..24], [25..32] ]
+     * @param n
+     * @return
+     */
     @CompileStatic
     Object getAt(Object n) {
         if(n == null) {
@@ -287,22 +287,22 @@ class Matrix extends Expando implements Iterable {
        } 
     }
     
-	/**
-	 * Return a subset of the rows indicated by the indices in the given iterable
-	 * (Note that the indices don't need to be consecutive or monotonic).
-	 * @param i
-	 * @return
-	 */
+    /**
+     * Return a subset of the rows indicated by the indices in the given iterable
+     * (Note that the indices don't need to be consecutive or monotonic).
+     * @param i
+     * @return
+     */
     @CompileStatic
     double[][] subsetRows(Iterable<Number> i) {
         List<Integer> indices = new ArrayList(this.matrix.rowDimension)
         i.each { Number n -> indices.add(n.toInteger()) }
-		
-		double [][] result = new double[indices.size()][this.matrix.columnDimension]
-		int destRowIndex = 0
-		for(int srcRowIndex in indices) {
-			System.arraycopy(this.matrix.dataRef[srcRowIndex], 0, result[destRowIndex++], 0, this.matrix.columnDimension)
-		}
+        
+        double [][] result = new double[indices.size()][this.matrix.columnDimension]
+        int destRowIndex = 0
+        for(int srcRowIndex in indices) {
+            System.arraycopy(this.matrix.dataRef[srcRowIndex], 0, result[destRowIndex++], 0, this.matrix.columnDimension)
+        }
         return result
     }
     
@@ -311,13 +311,13 @@ class Matrix extends Expando implements Iterable {
        matrix.dataRef[n] = (values as double[])
     }
     
-	/**
-	 * Specialization of <code>collect</code>: if 1 arg then
-	 * just pass the row, if 2 args, pass the row AND the index.
-	 * 
-	 * @param c	Closure to execute for each row in the matrix
-	 * @return	results collected
-	 */
+    /**
+     * Specialization of <code>collect</code>: if 1 arg then
+     * just pass the row, if 2 args, pass the row AND the index.
+     * 
+     * @param c    Closure to execute for each row in the matrix
+     * @return    results collected
+     */
     @CompileStatic
     def collect(Closure c) {
         List<Object> results = new ArrayList(matrix.dataRef.size())
@@ -392,8 +392,8 @@ class Matrix extends Expando implements Iterable {
         
         List<Number> keepRows = this.findIndexValues(c)
 
-		double [][] submatrix = this.subsetRows((Iterable<Number>)keepRows)
-		
+        double [][] submatrix = this.subsetRows((Iterable<Number>)keepRows)
+        
         def result = new Matrix(new Array2DRowRealMatrix(submatrix))
         result.@names = this.@names
         if(!this.properties.isEmpty()) 
