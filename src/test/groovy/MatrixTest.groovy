@@ -1,7 +1,5 @@
 import static org.junit.Assert.*;
 
-import javax.vecmath.Matrix3d;
-
 import org.junit.Test;
 
 import graxxia.*
