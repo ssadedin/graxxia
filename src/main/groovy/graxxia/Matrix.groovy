@@ -151,9 +151,10 @@ class Matrix extends Expando implements Iterable {
         if(columnNames)
             this.@names = [columnNames,isNumerics].transpose().grep { it[1] }.collect { it[0] }
             
+        int nonNumericIndex = 0
         isNumerics.eachWithIndex { isNumeric, index ->
             if(!isNumeric)
-                this.setProperty(columnNames[index],nonNumerics[index])        
+                this.setProperty(columnNames[index],nonNumerics[nonNumericIndex++])        
         }
     }
     
