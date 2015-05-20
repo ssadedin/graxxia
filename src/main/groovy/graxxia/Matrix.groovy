@@ -20,6 +20,7 @@ import groovy.transform.CompileStatic;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix;
+import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
 
 /**
  * Wraps an Apache-Commons-Math matrix of double values with a 
@@ -81,6 +82,7 @@ class Matrix extends Expando implements Iterable {
         def originalMultiply = Integer.metaClass.getMetaMethod("multiply", Class)
         Integer.metaClass.multiply = { arg -> arg instanceof Matrix ? arg.multiply(delegate) : originalMultiply(arg)}
     }
+    
 	
     /**
      * How many rows are displayed in toString() and other calls that format output
@@ -114,17 +116,45 @@ class Matrix extends Expando implements Iterable {
 		matrix = new Array2DRowRealMatrix(newData,false)
 		this.names = columns.collect { MatrixColumn c -> c.name }
 	}
-	
-	
     
-    public Matrix(Iterable<Iterable> rows) {
+    public Matrix(Iterable<Iterable> rows, List<String> columnNames=null) {
         List data = new ArrayList(4096)
         int rowCount = 0
-        for(r in rows) {
-            double[] rowData = r.collect{ (double)it }
-			data.add(rowData)
+        Iterable r0 = rows[0]
+        List<Boolean> isNumerics = r0.collect { it instanceof Number }
+        
+        int matrixColumnCount = isNumerics.count { it }
+        
+        // Initialise an empty list for each non-numeric column that
+        // we are going to fill
+        List<List> nonNumerics = isNumerics.grep { !it }.collect { [] }
+        
+        int rowIndex = 0
+        for(row in rows) {
+            int colIndex = 0
+            int numericColumnIndex = 0
+            int nonNumericColumnIndex = 0
+            double[] rowNumericValues = new double[matrixColumnCount]
+            for(value in row) {  
+                if(isNumerics[colIndex]) {
+                    rowNumericValues[numericColumnIndex++] = (double)value
+                }
+                else
+                    nonNumerics[nonNumericColumnIndex++].add(value)
+                ++colIndex
+            }
+            ++rowIndex
+			data.add(rowNumericValues)
         }
+        
         matrix = new Array2DRowRealMatrix((double[][])data.toArray(), false)
+        if(columnNames)
+            this.@names = [columnNames,isNumerics].transpose().grep { it[1] }.collect { it[0] }
+            
+        isNumerics.eachWithIndex { isNumeric, index ->
+            if(!isNumeric)
+                this.setProperty(columnNames[index],nonNumerics[index])        
+        }
     }
     
     public Matrix(double [][] values) {
@@ -145,7 +175,6 @@ class Matrix extends Expando implements Iterable {
             }
         }
 	}
-	
     
     public Matrix(int rows, int columns, double[] matrixData) {
 		this.initFromArray(rows, columns, matrixData)
@@ -588,13 +617,37 @@ class Matrix extends Expando implements Iterable {
     }
     
     void save(Writer w) {
+        
+        List nonMatrixCols = this.properties*.key 
+        
+        List columnNames = nonMatrixCols + (this.names?:this.properties.names)
+        
         // NOTE: the this.properties.names seems to be required because of a 
         // weird bug where groovy will prefer to set an expando property rather than
         // set the real property on this object
-        if(this.names/* || this.properties.names */) {
-            w.println "# " + (this.names?:this.properties.names).join("\t")   
+        if(columnNames) {
+            w.println "# " + columnNames.join("\t")   
         }
+        
+        if(this.rowDimension == 0)
+            return
+        
+        List<MatrixValueAdapter> adapters = TSV.formats + [
+           new NumberMatrixValueAdapter(),
+           new StringMatrixValueAdapter()
+        ] 
+       
+        List<MatrixValueAdapter> types = nonMatrixCols.collect { colName ->
+            adapters.find { adapter -> adapter.sniff(getProperty(colName)[0]) }
+        }
+        
         eachRow { row ->
+            def d = delegate
+            if(nonMatrixCols) {
+                nonMatrixCols.eachWithIndex { colName, colIndex -> 
+                    w.print((types[colIndex].serialize(d[colName])) + "\t") 
+                }
+            }
             w.println((row as List).join("\t"))
         }
     }
@@ -614,10 +667,7 @@ class Matrix extends Expando implements Iterable {
             r.close()
             r = new FileReader(fileName)
         }
-        Matrix m = new Matrix(new TSV(readFirstLine:true, r)*.values)
-        if(names)
-            m.@names = names
-            
+        Matrix m = new Matrix(new TSV(readFirstLine:true, r)*.values, names)
         return m
     }
        
@@ -642,7 +692,7 @@ class Matrix extends Expando implements Iterable {
         def printRow = { row ->
            List cells = (row as List)
            if(this.properties) {
-               cells = this.properties.collect { it.value[rowCount] } + cells
+               cells = this.properties.collect { it.value?it.value[rowCount]:"null" } + cells
            }
            def values = cells.collect { value ->
                if(!(value instanceof Double))
@@ -681,5 +731,14 @@ class Matrix extends Expando implements Iterable {
     
     void setNames(List<String> names) {
         this.names = names
+    }
+    
+    Object getProperty(String name) {
+        if(name in this.@names) {
+            return this.col(this.@names.indexOf(name))
+        }
+        else {
+            return super.getProperty(name)
+        }
     }
 }

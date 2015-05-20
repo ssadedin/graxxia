@@ -1,8 +1,11 @@
 import static org.junit.Assert.*;
 
+import javax.vecmath.Matrix3d;
+
 import org.junit.Test;
 
 import graxxia.*
+import groovy.time.TimeCategory;
 
 class MatrixTest {
 
@@ -236,5 +239,50 @@ class MatrixTest {
 		
 		assert m.grep { legs > 3 }.animal == ["dog"]
 		
+    }
+    
+    @Test
+    void testSaveNonNumeric() {
+        Matrix m = new Matrix([[2,5,3,3,4], [5,6,7,2,4]])
+        m.@names = ["legs","toes","feet","ears","eyes"]
+        m.animal = ["frog","dog"]
+        m.ages = [2,7]
+        
+        m.save("testSaveNonNumeric.tsv")
+        
+        println new File("testSaveNonNumeric.tsv").text
+        
+        Matrix m2 = Matrix.load("testSaveNonNumeric.tsv")
+        
+        println m2.toString()
+        
+        println m2.legs
+        
+        assert m2.legs.find { Math.abs(it - 2) < 0.01 }
+        assert m2.legs.find { Math.abs(it - 5) < 0.01 }
+        
+        assert m2.animal == ["frog","dog"]
+        assert "legs" in m2.@names
+        assert "eyes" in m2.@names
+        
+        new File("testSaveNonNumeric.tsv").delete()
+    }
+    
+    @Test
+    void testSaveCustomType() {
+        Matrix m = new Matrix([[2,5,3], [5,6,7]])
+        m.@names = ["legs","toes","feet"]
+        m.date = [new Date(),new Date(System.currentTimeMillis()-24*3600*1000)]
+        
+        m.save("testSaveDate.tsv")
+        
+        println new File("testSaveDate.tsv").text
+        
+        Matrix m2 = Matrix.load("testSaveDate.tsv")
+        
+        println m2
+        
+        assert m2.date[0] instanceof Date
+         
     }
 }
