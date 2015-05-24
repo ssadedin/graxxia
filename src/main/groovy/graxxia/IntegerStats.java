@@ -25,7 +25,7 @@ public class IntegerStats extends SummaryStatistics {
     
     private static final long serialVersionUID = 1L;
 
-    int [] values = null;
+    public int [] values = null;
     
     int total = 0;
     
