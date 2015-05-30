@@ -22,8 +22,31 @@ make doing simple data analysis in Groovy quite powerful and in some cases
 compares very favorably to doing it in other languages. Combined with the
 Groovy Shell, it becomes quite useful for interactive data analysis.
 
-Building and Using It
-========
+
+Quick Try Out
+============
+
+Graxxia is now available from Maven Central! That means you can use it without any download or
+compile via the @Grab annotation. To give Graxxia a try, start a Groovy shell:
+
+    groovysh
+
+Then enter the following:
+
+    groovy:000> @Grab('org.graxxia:graxxia:0.9')
+    groovy:001> import graxxia.*
+    groovy:001> m = new Matrix([[3,4,5],[6,2,3]])
+    ===> 2x3 Matrix:
+    0:    3          4          5 
+    1:    6          2          3
+
+The @Grab line may take a while depending on whether you already downloaded
+any of Graxxia's dependencies or not. It will only be slow the first time you
+run it.
+
+Building and Using It from Source
+=================================
+
 It's pretty straight forward:
 
 Check out the code:
