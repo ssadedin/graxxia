@@ -117,6 +117,21 @@ class Matrix extends Expando implements Iterable {
         this.names = columns.collect { MatrixColumn c -> c.name }
     }
     
+    Matrix(Map<String,Iterable> sourceColumns) {
+        
+        int rows = sourceColumns.iterator().next().value.size()
+        
+        final int cols = sourceColumns.size()
+        double[][] newData =  new double[rows][]
+        List<Iterator> iters = sourceColumns.collect { it.value.iterator() }
+        for(int i=0; i<rows;++i) {
+            newData[i] = iters.collect { (double)it.next() } as double[]
+        }
+        matrix = new Array2DRowRealMatrix(newData,false)
+        this.names = sourceColumns*.key
+    }
+  
+    
     public Matrix(Iterable<Iterable> rows, List<String> columnNames=null) {
         List data = new ArrayList(4096)
         int rowCount = 0
@@ -541,7 +556,7 @@ class Matrix extends Expando implements Iterable {
     @CompileStatic
     void eachRow(Closure c) {
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.delegate = delegate
