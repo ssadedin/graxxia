@@ -302,7 +302,7 @@ class MatrixTest {
             frog: [2,4,5],
             tree: [8,2,7]
         )
-        m.cow = ["maisy","daisy","doo"]
+        m.cow = ["maisy is a really good cow. I think she is great","daisy","doo"]
         
         StringWriter sw = new StringWriter()
         m.toMarkdown(sw)

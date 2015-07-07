@@ -755,22 +755,34 @@ class Matrix extends Expando implements Iterable, Serializable {
         int columnWidth = Math.max(10, headerCells ? headerCells*.size().max() : 0)
         int rowNumWidth = 6
         
+        List<Integer> columnWidths  
+        if(this.rowDimension<100) {
+            columnWidths = properties.collect { e -> e.value[0] instanceof Number ? columnWidth : e.value.collect { String.valueOf(it).size()}.max() } +
+                           [columnWidth] * this.columnDimension
+        }
+        else {
+            columnWidths = columnWidth * this.columnDimension
+        }
+        
         String headers = headerCells ? (" " * rowNumWidth) + headerCells*.padRight(columnWidth).join(" ") + "\n" : ""
         
         DecimalFormat format = new DecimalFormat()
         format.minimumFractionDigits = 0
         format.maximumFractionDigits = 6
         
-        String header = "| " + headerCells.collect { it.padRight(columnWidth) }.join(" | ") + "|"
+        int columnIndex = 0
+        String header = "| " + headerCells.collect { it.padRight(columnWidths[columnIndex++]) }.join(" | ") + "|"
         w.println(header)
-        w.println "|-" + headerCells.collect { "-" * Math.max(columnWidth, it.size()) }.join("-|-") + "|"
+        columnIndex = 0
+        w.println "|-" + headerCells.collect { "-" * Math.max(columnWidths[columnIndex++], it.size()) }.join("-|-") + "|"
         
         List<Iterator> props = properties.collect { it.value.iterator() }
         
         int index = 0
         this.eachRow { row ->
             
-            w.print "| " +  props.collect { (it.hasNext() ? it.next() : " ").padRight(columnWidth) }.join(" | ") + " | "
+            columnIndex = 0
+            w.print "| " +  props.collect { (it.hasNext() ? it.next() : " ").padRight(columnWidths[columnIndex++]) }.join(" | ") + " | "
            
             w.println row.collect { format.format(it).padRight(columnWidth) }.join(" | ") + "|"
             ++index
