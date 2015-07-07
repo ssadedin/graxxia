@@ -741,6 +741,43 @@ class Matrix extends Expando implements Iterable {
         }
     }
     
+    Writer toMarkdown(Writer w = null) {
+        
+        if(w == null)
+            w = new StringWriter()
+        
+        def propCells = this.properties.collect { it.key } 
+        def headerCells = this.@names
+        if(this.properties) {
+            headerCells = propCells + headerCells
+        }
+        
+        int columnWidth = Math.max(10, headerCells ? headerCells*.size().max() : 0)
+        int rowNumWidth = 6
+        
+        String headers = headerCells ? (" " * rowNumWidth) + headerCells*.padRight(columnWidth).join(" ") + "\n" : ""
+        
+        DecimalFormat format = new DecimalFormat()
+        format.minimumFractionDigits = 0
+        format.maximumFractionDigits = 6
+        
+        String header = "| " + headerCells.collect { it.padRight(columnWidth) }.join(" | ") + "|"
+        w.println(header)
+        w.println "|-" + headerCells.collect { "-" * Math.max(columnWidth, it.size()) }.join("-|-") + "|"
+        
+        List<Iterator> props = properties.collect { it.value.iterator() }
+        
+        int index = 0
+        this.eachRow { row ->
+            
+            w.print "| " +  props.collect { (it.hasNext() ? it.next() : " ").padRight(columnWidth) }.join(" | ") + " | "
+           
+            w.println row.collect { format.format(it).padRight(columnWidth) }.join(" | ") + "|"
+            ++index
+        }
+        return w
+    }
+    
     void setColumnNames(List<String> names) {
         this.names = names
     }
