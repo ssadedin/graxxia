@@ -21,6 +21,7 @@ import java.awt.Color;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
+import org.apache.commons.math3.analysis.UnivariateFunction
 import org.apache.commons.math3.analysis.interpolation.*
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
@@ -198,37 +199,74 @@ class Drawing {
     
     
     PolynomialSplineFunction loess(Map options=[:], Iterable<Double> x, Iterable<Double> y) {
-        LoessInterpolator interp = new LoessInterpolator()
-        PolynomialSplineFunction fn = interp.interpolate(x as double[], y as double[])
         
+        List xValues = new ArrayList()
+        List yValues = new ArrayList()
+        Iterator yIterator = y.iterator()
+        for(xValue in x) {
+           Double yValue = yIterator.next() 
+           if(xValue == null || yValue == null)
+               continue
+           if(yValue instanceof Double && (yValue.isNaN() || yValue.isInfinite()))
+               continue
+           if(xValue instanceof Double && (xValue.isNaN() || xValue.isInfinite()))
+               continue
+           
+           xValues.add(xValue)
+           yValues.add(yValue)
+        }
+        
+        List lineYValues = []
+        List lineXValues = []
+        
+        UnivariateInterpolator interp
+        if(xValues.size()==1) {
+            return new UnivariateInterpolator() {
+                UnivariateFunction interpolate(double [] xval, double [] yval) {
+                    return new UnivariateFunction() {
+                        double value(double xValue) {
+                            yValues[0]
+                        }
+                    }
+                }
+            }
+        }
+        else
+        if(xValues.size() > 8) {
+            interp = new LoessInterpolator()
+        }
+        else {
+            interp = new LinearInterpolator()
+        }
+        
+        PolynomialSplineFunction fn = interp.interpolate(xValues as double[], yValues as double[])
+            
         double minXValue = x.min()
         double maxXValue = x.max()
-        
+            
         // Interpolate to factor of 10
         double width = maxXValue - minXValue
-        
+            
         // A point every 5 pixels
         double xInterval = 5 / xScale
         double xInterp = minXValue
-        List lineYValues = []
-        List lineXValues = []
         List colors = []
         while(xInterp < maxXValue) {
             lineXValues << xInterp
             double yValue = fn.value(xInterp)
             lineYValues << yValue
-            
+                
             if(options.color != null)
                 colors << options.color(xInterp, yValue)
-            
+                
             xInterp += xInterval
         }
-        
         if(options.color != null) {
             options.color = colors;
         }
         
-        lines(options, lineXValues[0..-2], lineYValues[0..-2], lineXValues[1..-1], lineYValues[1..-1])
+        if(lineXValues.size()>1)
+            lines(options, lineXValues[0..-2], lineYValues[0..-2], lineXValues[1..-1], lineYValues[1..-1])
         
         return fn
     }
