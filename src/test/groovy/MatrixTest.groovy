@@ -283,4 +283,53 @@ class MatrixTest {
         assert m2.date[0] instanceof Date
          
     }
+    
+    @Test
+    void testInitFromMap() {
+        Matrix m = new Matrix(
+            frog: [2,4,5],
+            tree: [8,2,7]
+            )
+        
+        assert m[2][1] == 7
+        
+        assert m.frog[1] == 4
+    }
+    
+    @Test
+    void testMarkdown() {
+        Matrix m = new Matrix(
+            frog: [2,4,5],
+            tree: [8,2,7]
+        )
+        m.cow = ["maisy","daisy","doo"]
+        
+        StringWriter sw = new StringWriter()
+        m.toMarkdown(sw)
+        println sw.toString()
+  
+    }
+    
+    @Test
+    void testSerialize() {
+        Matrix m = new Matrix(
+            frog: [2,4,5],
+            tree: [8,2,7]
+        )
+        m.cow = ["maisy","daisy","doo"]
+        
+        println m[1][0] 
+        
+        ByteArrayOutputStream baos
+        def oos = new ObjectOutputStream(baos=new ByteArrayOutputStream())
+        oos.writeObject(m)
+        oos.close()
+        
+        new ByteArrayInputStream(baos.toByteArray()).withObjectInputStream { ois ->
+            Matrix m2 = ois.readObject()
+            assert m2.cow[2] == "doo"
+            assert m2[1][0] == 4
+            
+        }
+    }
 }

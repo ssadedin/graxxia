@@ -66,7 +66,7 @@ import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
  * 
  * @author simon.sadedin@mcri.edu.au
  */ 
-class Matrix extends Expando implements Iterable {
+class Matrix extends Expando implements Iterable, Serializable {
      
     static { 
         
@@ -776,6 +776,24 @@ class Matrix extends Expando implements Iterable {
             ++index
         }
         return w
+    }
+    
+    @CompileStatic
+    private void writeObject(ObjectOutputStream oos) throws IOException {
+        // default serialization
+        oos.defaultWriteObject();
+        oos.writeObject(this.properties)
+    }
+    
+    @CompileStatic
+    private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+        // default deserialization
+        ois.defaultReadObject();
+        
+        Map props = (Map)ois.readObject()
+        props.each { Map.Entry<String,Object> e ->
+            setProperty((String)e.key, e.value)
+        }
     }
     
     void setColumnNames(List<String> names) {
