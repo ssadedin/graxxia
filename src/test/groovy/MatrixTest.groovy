@@ -332,4 +332,49 @@ class MatrixTest {
             
         }
     }
+    
+    @Test
+    void testGroupBy() {
+       Matrix m = new Matrix(
+            [
+             [2,4], // brown
+             [8,2], // white
+             [4,5], // white
+             [3,6], // brown
+             [7,2]  // black
+            ]
+        )
+        m.@names = ["age","weight"]
+        m.color = ["brown","white","white","brown", "black"]
+          
+        def grouped = m.groupBy { color }
+        
+        assert grouped.brown[0][0] == 2
+        assert grouped.brown[1][0] == 3
+        assert grouped.brown[1][1] == 6
+        assert grouped.black.rowDimension == 1
+        
+        assert grouped.black.age == [7]
+    }
+    
+    @Test
+    void testCountBy() {
+       Matrix m = new Matrix(
+            [
+             [2,4], // brown
+             [8,2], // white
+             [4,5], // white
+             [3,6], // brown
+             [7,2]  // black
+            ]
+        )
+        m.@names = ["age","weight"]
+        m.color = ["brown","white","white","brown", "black"]
+          
+        def counts = m.countBy { color }
+       
+        assert counts.white == 2
+        assert counts.brown == 2
+        assert counts.black == 1
+    } 
 }

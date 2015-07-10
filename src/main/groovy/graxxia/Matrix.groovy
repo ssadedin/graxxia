@@ -67,6 +67,8 @@ import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
  * @author simon.sadedin@mcri.edu.au
  */ 
 class Matrix extends Expando implements Iterable, Serializable {
+    
+    static final long serialVersionUID = 0
      
     static { 
         
@@ -135,8 +137,15 @@ class Matrix extends Expando implements Iterable, Serializable {
     public Matrix(Iterable<Iterable> rows, List<String> columnNames=null) {
         List data = new ArrayList(4096)
         int rowCount = 0
-        Iterable r0 = rows[0]
-        List<Boolean> isNumerics = r0.collect { it instanceof Number }
+        
+        List<Boolean> isNumerics
+        def r0 = rows[0]
+        if(rows[0] instanceof Iterable) {
+            isNumerics = r0.collect { it instanceof Number }
+        }
+        else {
+            isNumerics = [true] * r0.size()
+        }
         
         int matrixColumnCount = isNumerics.count { it }
         
@@ -281,6 +290,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             throw new IllegalArgumentException("Cannot subset rows by type: " + n?.class?.name)
         }
     }
+    
     @CompileStatic
     Iterator iterator() {
        new Iterator() {
@@ -580,6 +590,48 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
         }
     }
+    
+    Map<Object,Matrix> groupBy(Closure c) {
+        IterationDelegate delegate = new IterationDelegate(this)
+        boolean withDelegate = !this.properties.isEmpty()
+        if(withDelegate) {
+            c = (Closure)c.clone()
+            c.setDelegate(delegate)
+        }
+        int rowIndex = 0;
+        
+        List myNames = this.@names
+        
+        matrix.dataRef.groupBy {
+            if(withDelegate)
+                delegate.row = rowIndex++
+            c()
+        }.collectEntries { e ->
+            def value = e.value
+            def m = new Matrix(e.value)
+            m.@names = myNames;
+            [ e.key, m ]
+        }
+    }
+    
+    Map<Object,Integer> countBy(Closure c) {
+        IterationDelegate delegate = new IterationDelegate(this)
+        boolean withDelegate = !this.properties.isEmpty()
+        if(withDelegate) {
+            c = (Closure)c.clone()
+            c.setDelegate(delegate)
+        }
+        int rowIndex = 0;
+        
+        List myNames = this.@names
+        
+        matrix.dataRef.countBy {
+            if(withDelegate)
+                delegate.row = rowIndex++
+            c()
+        }
+    }
+  
     
     /**
      * Shorthand to give a familiar function to R users
