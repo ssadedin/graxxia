@@ -62,16 +62,22 @@ class TSV implements Iterable {
     
     TSV(Map options=[:], String fileName) {
         this.reader =  { 
-            fileName.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader() 
+            getReader(fileName)
         }
         this.options = options
-        if(this.options.containsKey('columnNames') && !this.options.containsKey('readFirstLine'))
-            this.options.readFirstLine = true
+        checkFirstLine()
     }
     
     TSV(Map options=[:], Reader r) {
         this.reader =  { return r }
         this.options = options
+        checkFirstLine()
+    }
+    
+    void checkFirstLine() {
+        if(this.options.containsKey('columnNames') && !this.options.containsKey('readFirstLine')) {
+            this.options.readFirstLine = true
+        }
     }
      
     CsvIterator newIterator() {
@@ -230,6 +236,17 @@ class TSV implements Iterable {
                     writer.println columns.collect { line[it] }.join(options.separator)
             }
         }
+    }
+    
+    static int sniffColumnCount(String fileName, String separator = '\t') {
+        getReader(fileName).withCloseable { r ->
+            return r.readLine().split(separator).size()
+        }
+        
+    }
+    
+    static getReader(String fileName) {
+       fileName.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader()  
     }
 }
 
