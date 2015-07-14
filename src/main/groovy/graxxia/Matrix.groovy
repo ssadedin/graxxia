@@ -106,8 +106,9 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     private void initFromColumns(MatrixColumn[] sourceColumns) {
-        int rows = columns[0].size()
-        final int cols = columns.size()
+        MatrixColumn c0 = sourceColumns[0]
+        int rows = c0.size()
+        final int cols = sourceColumns.size()
         double[][] newData =  new double[rows][]
         MatrixColumn [] columns = sourceColumns
         for(int i=0; i<rows;++i) {
@@ -228,13 +229,13 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     List<MatrixColumn> getColumns(List<String> names) {
-        names.collect { this.names.indexOf(it) }.collect { int index ->
+        new MatrixColumnList(columns:names.collect { this.names.indexOf(it) }.collect { int index ->
              assert index >= 0; col(index) 
-        }
+        })
     }
     
-    List<MatrixColumn> getColumns() {
-        (0..<matrix.columnDimension).collect { col(it) }
+    MatrixColumnList getColumns() {
+        new MatrixColumnList(columns:(0..<matrix.columnDimension).collect { col(it) })
     }
     
     @CompileStatic
@@ -337,17 +338,31 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     /**
-     * Specialization of <code>collect</code>: if 1 arg then
-     * just pass the row, if 2 args, pass the row AND the index.
+     * Iterates through a matrix row-wise, passing each row as an array of doubles
+     * to the supplied closure.
+     * <p>
+     * If the passed closure acceptes 1 argument then just passes the row.
+     * If 2 arguments, passes the row AND the index. 
+     * <p>
+     * In addition, this method enables accessing of columns and expando properties
+     * by name for the current row.
+     * <p>
+     * Example:
+     * <pre>
+     *  def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+     *  assert m.collect { x1 * x2 } == [2.0d,  8.0d, 18.0d, 32.0d, 50.0d]
+     *  </pre>
+     * 
+     * <em>Note:</em> If you want to get a matrix back, see the #transformRows() method.
      * 
      * @param c    Closure to execute for each row in the matrix
      * @return    results collected
      */
     @CompileStatic
-    def collect(Closure c) {
+    List collect(Closure c) {
         List<Object> results = new ArrayList(matrix.dataRef.size())
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.setDelegate(delegate)
@@ -356,7 +371,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(c.maximumNumberOfParameters == 1) {
             for(double [] row in matrix.dataRef) {
                 if(withDelegate)
-                    delegate.row = rowIndex
+                    delegate.row = rowIndex++
                 results.add(c(row))
             }
         }
@@ -678,13 +693,26 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
-    void save(String fileName) {
+    /**
+     * Save the matrix to a file in tab separated format. 
+     * <p>
+     * If the matrix has column names set (either as expando properties or using the @names attribute,
+     * then the column names will be printed as the first row.
+     * <p>
+     * Options may be passed as names parameters, or a map of parameters as the first argument. 
+     * Valid options include:
+     * <li>r    -   set to true to make the output format compatible with the default 
+     *              format read by R
+     * 
+     * @param fileName
+     */
+    void save(Map options = [:], String fileName) {
         new File(fileName).withWriter { w ->
-            save(w)
+            save(options,w)
         }
     }
     
-    void save(Writer w) {
+    void save(Map options = [:], Writer w) {
         
         List nonMatrixCols = this.properties*.key 
         
@@ -694,7 +722,9 @@ class Matrix extends Expando implements Iterable, Serializable {
         // weird bug where groovy will prefer to set an expando property rather than
         // set the real property on this object
         if(columnNames) {
-            w.println "# " + columnNames.join("\t")   
+            if(!options.r)
+            w.print "# "
+            w.println columnNames.join("\t")   
         }
         
         if(this.rowDimension == 0)
@@ -875,5 +905,31 @@ class Matrix extends Expando implements Iterable, Serializable {
         else {
             return super.getProperty(name)
         }
+    }
+    
+    static Matrix fromListMap(List<Map> valueList) {
+        
+        // Get the column names and types from the first row
+        Map row0 = valueList[0]
+        List<Integer> numerics = row0.findIndexValues { it.value instanceof Number }
+        List<String> nonNumerics = row0.grep { !(it.value instanceof Number) }*.key
+        
+        final int numNumerics = numerics.size()
+        
+        double [][] data = new double[valueList.size()][]
+        valueList.eachWithIndex { Map values, int index ->
+            data[index] = values.collect {it}[numerics].collect { it.value.toDouble() }
+        }
+        
+        Matrix result = new Matrix(data)
+        nonNumerics.each { key ->
+            result[key] = valueList.collect { it[key]}
+        }
+        result.@names = row0*.key[numerics]
+        return result
+    }
+    
+    int size() {
+        return matrix.rowDimension
     }
 }

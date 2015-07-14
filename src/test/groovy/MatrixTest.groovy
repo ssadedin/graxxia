@@ -377,4 +377,47 @@ class MatrixTest {
         assert counts.brown == 2
         assert counts.black == 1
     } 
+    
+    @Test
+    void testColumnSubset() {
+        def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+        
+        def m2c = m[]
+        
+        assert m2c.getClass().name == "graxxia.MatrixColumnList"
+       
+        def m2 = m[][1..-1]
+        
+        assert m2[0][0] == 2
+        
+        assert m2.@names == ["x2","x3"]
+        
+        println "Matrix after columns subset = " + m2
+    }
+    
+    @Test
+    void testCollect() {
+        def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+        
+        assert m.collect { x1 * x2 } == [2.0d,  8.0d, 18.0d, 32.0d, 50.0d]
+        
+    }
+    
+    @Test
+    void testFromListMap() {
+        
+        def lm = [
+               [foo: 1, bar:2, dog: "fido"],
+               [foo: 8, bar:1, dog: "biffo"],
+               [foo: 3, bar:9, dog: "pup"],
+            ]
+        
+        Matrix m = Matrix.fromListMap(lm)
+        
+        println m
+        
+        assert m.foo[0] == 1
+        assert m.bar[1] == 1
+        assert m.dog[2] == "pup"
+    }
 }
