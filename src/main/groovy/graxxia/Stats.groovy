@@ -49,6 +49,8 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  */
 class Stats extends DescriptiveStatistics {
 
+    static final long serialVersionUID = 0L
+
     public Stats() {
     }
     
