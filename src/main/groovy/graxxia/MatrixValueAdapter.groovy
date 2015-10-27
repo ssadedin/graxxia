@@ -88,7 +88,7 @@ class DateMatrixValueAdapter implements MatrixValueAdapter<Date> {
             format.parse(value)
             return true
         } 
-        catch (ParseException e) {
+        catch (ParseException|NumberFormatException|ArrayIndexOutOfBoundsException ex) {
             return false
         }
     }
