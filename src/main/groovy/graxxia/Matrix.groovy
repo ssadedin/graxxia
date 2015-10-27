@@ -10,6 +10,7 @@
  */
 package graxxia
  
+import java.lang.reflect.Method
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -84,8 +85,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         def originalMultiply = Integer.metaClass.getMetaMethod("multiply", Class)
         Integer.metaClass.multiply = { arg -> arg instanceof Matrix ? arg.multiply(delegate) : originalMultiply(arg)}
+        
+//        Matrix.metaClass.max = { c -> delegate.iterateWithDelegate(org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("max", Iterator,  Closure), c) }
+        
     }
-    
     
     /**
      * How many rows are displayed in toString() and other calls that format output
@@ -462,7 +465,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         List<Integer> keepRows = []
         int rowIndex = 0;
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.setDelegate(delegate)
@@ -561,7 +564,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         final int cols = matrix.columnDimension
         double[][] newData = new double[rows][cols]
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.delegate = delegate
@@ -583,7 +586,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         final int cols = matrix.columnDimension
         double[][] newData = new double[rows][cols]
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.delegate = delegate
@@ -619,7 +622,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         double[][] newData = new double[rows][cols]
         
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.delegate = delegate
@@ -676,6 +679,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
+    /*
     Map<Object,Matrix> groupBy(Closure c) {
         IterationDelegate delegate = new IterationDelegate(this)
         boolean withDelegate = !this.properties.isEmpty()
@@ -698,10 +702,11 @@ class Matrix extends Expando implements Iterable, Serializable {
             [ e.key, m ]
         }
     }
+    */
     
     Map<Object,Integer> countBy(Closure c) {
         IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty()
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
             c.setDelegate(delegate)
@@ -713,7 +718,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         matrix.dataRef.countBy {
             if(withDelegate)
                 delegate.row = rowIndex++
-            c()
+            c(it)
         }
     }
   
@@ -835,7 +840,8 @@ class Matrix extends Expando implements Iterable, Serializable {
             r.close()
             r = new FileReader(fileName)
         }
-        Matrix m = new Matrix(new TSV(readFirstLine:true, r)*.values, names)
+        def values = new TSV(readFirstLine:true, r)*.values
+        Matrix m = new Matrix(values, names)
         return m
     }
        
@@ -972,9 +978,12 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(name in this.@names) {
             return this.col(this.@names.indexOf(name))
         }
-        else {
-            return super.getProperty(name)
-        }
+        
+       def result = super.getProperty(name)
+       if(result == null) 
+           throw new IllegalArgumentException("No column named $name in this Matrix")
+           
+       return result
     }
     
     static Matrix fromListMap(List<Map> valueList) {
@@ -999,7 +1008,249 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     }
     
+    static Method maxMethod = org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("max", Collection,  Closure)
+    Matrix max(Closure c) {
+        applyViaIndices(maxMethod,c)
+    }
+    
+    static Method findMethod = org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("find", Object,  Closure)
+    Matrix find(Closure c) {
+        iterateWithDelegate(findMethod, c) 
+    }    
+    
+    static Method findAllMethod = org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("findAll", Object,  Closure)
+    Matrix findAll(Closure c) {
+        iterateWithDelegate(findAllMethod, c) 
+    }    
+    
+    static Method uniqueMethod = org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("unique", Collection,  Closure)
+    Matrix unique(Closure c) {
+        applyViaIndices(uniqueMethod, c)
+    }
+    
+    static Method sortMethod = org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("sort", Iterable,  Closure)
+    Matrix sort(Closure c) {
+        applyViaIndices(sortMethod, c)
+    }
+    
+    static Method groupByMethod = org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod("groupBy", Iterable,  Closure)
+    Matrix groupByTest(Closure c) {
+        applyViaIndices(groupByMethod, c)
+    }    
+    
+    Map<Object,Matrix> groupBy(Closure c) {
+        List indices = (0..<this.rowDimension).collect { it }
+        IterationDelegate delegate = new IterationDelegate(this)
+        Closure cloned = (Closure)c.clone()
+        cloned.delegate = delegate
+        def result = indices.groupBy { i ->
+            delegate.row = i
+            return cloned(this.dataRef[i])
+        }
+        
+        result.collectEntries { e ->
+            double [][] submatrix = subsetRows(e.value)
+            Matrix m = new Matrix(new Array2DRowRealMatrix(submatrix))
+            m.@names = this.@names
+            if(!this.properties.isEmpty()) 
+                this.transferPropertiesToRows(m,e.value)        
+            [
+                e.key,
+                m
+            ]
+        }
+    }
+    
+    Matrix applyViaIndices(Method method, Closure c) {
+        List indices = (0..<this.rowDimension).collect { it }
+        IterationDelegate delegate = new IterationDelegate(this)
+        Closure cloned = (Closure)c.clone()
+        cloned.delegate = delegate
+        def result = method.invoke(null, indices,{ i ->
+            delegate.row = i
+            return cloned(this.dataRef[i])
+        })
+        
+        double [][] submatrix = result instanceof Integer ? subsetRows([result]) : subsetRows(result)
+        Matrix m = new Matrix(new Array2DRowRealMatrix(submatrix))
+        m.@names = this.@names
+        if(!this.properties.isEmpty()) 
+            this.transferPropertiesToRows(m)        
+        
+        return m
+    }
+    
+    Matrix iterateWithDelegate(String methodName, Closure c) {
+        iterateWithDelegate(org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod(methodName, Iterator,  Closure), c) 
+    }
+    
+    Matrix iterateWithDelegate(Method m, Closure c) {
+        IterationDelegate delegate = new IterationDelegate(this)
+        c = (Closure)c.clone()
+        c.setDelegate(delegate)
+        int rowIndex = 0;
+        Iterator i = this.iterator()
+        def result = m.invoke(null, i, { values ->
+            delegate.row = rowIndex++
+            c(values)
+        })
+        
+        Matrix matrixResult
+        if(result instanceof Matrix) {
+            matrixResult = result
+        }
+        else 
+        if(result instanceof double[][]) {
+            matrixResult = new Matrix(result)
+        }        
+        else
+        if(result instanceof double[]) {
+            matrixResult = new Matrix([result])
+        }
+        else
+        if(result instanceof Iterable) {
+            matrixResult = new Matrix(result)
+        }
+        else 
+            throw new Exception("Unexpected argument type from max: " + result.getClass().name)
+        
+        if(matrixResult.columnDimension == this.@names?.size())
+            matrixResult.@names = this.@names
+            
+        return matrixResult
+    }
+    
     int size() {
         return matrix.rowDimension
+    }
+    
+    Matrix aggregateBy(Object...args) {
+        Matrix me = this
+        List<String> names = args[0..-2]
+        aggregateBy(names.collectEntries { name -> [ name , { return delegate.getProperty(name) }] }, (Closure)args[-1] )
+    }
+    
+    Matrix aggregateBy(Map groups, Closure c) {
+        
+        Map<Object,Matrix> allGroups = [all:this]
+        groups.each { group ->
+            Map<Object,Matrix> reGrouped = [:]
+            allGroups.each { prevKey, m ->
+                Map<Object,Matrix> grouped = m.groupBy(group.value)
+                grouped.each { key, mGrouped ->
+                    if(prevKey == "all")
+                        reGrouped[ [key] ] = mGrouped
+                    else {
+                        reGrouped[ prevKey+key ] = mGrouped
+                    }
+                }
+            }
+            allGroups = reGrouped
+        }
+        
+        Map<Object,Matrix> aggregated = allGroups.collectEntries { g ->
+            [g.key, g.value.aggregate(c)]
+        }
+  
+           
+        List<String> columnNames = aggregated.iterator().next().value.getAllColumnNames()
+        Map<List> columns = [:] 
+        
+        int i=0
+        groups.each { groupName, groupClosure ->
+            columns[groupName] = aggregated*.key.collect { it[i] }
+            ++i
+        }
+        
+        for(columnName in columnNames) {
+            columns[columnName] = aggregated.collect { e -> e.value[columnName][0] }
+        }
+        
+        return new Matrix(columns)
+    }
+  
+    
+    /*
+    Matrix aggregateBy(Map groups, Closure c) {
+        
+        def group0 = groups.iterator().next()
+        Map<Object,Matrix> grouped = groupBy(group0.value)
+        Map<Object,Matrix> aggregated = grouped.collectEntries { g ->
+            [g.key, g.value.aggregate(c)]
+        }
+       
+        List<String> columnNames = aggregated.iterator().next().value.getAllColumnNames()
+        Map<List> columns = [:] 
+        columns[group0.key] = aggregated*.key
+        
+        for(columnName in columnNames) {
+            columns[columnName] = aggregated.collect { e -> e.value[columnName][0] }
+        }
+        
+        return new Matrix(columns)
+    }
+    */
+    
+    Matrix aggregate(Closure c) {
+        Closure cClone = c.clone()
+        MatrixAggregator aggregator = new MatrixAggregator(matrix:this)
+        cClone.delegate = aggregator
+        cClone();
+        
+        return new Matrix(aggregator.columns.collectEntries { [it.key, [it.value]]})
+    }
+    
+    List<String> getAllColumnNames() {
+        getProperties()*.key + (this.@names?:[])
+    }
+    
+    Map rowAsMap(int i) {
+        getProperties().collectEntries {  e ->
+            [e.key, e.value[i]]
+        } + this.columns.collectEntries { MatrixColumn c -> [c.name, c[i] ] }
+    }
+    
+    Iterator<Map> listMapIterator() {
+        new Iterator() {
+            
+            int i = -1;
+            
+            boolean hasNext() {
+                i < matrix.rowDimension-1
+            }
+            
+            Map next() {
+                rowAsMap(++i)
+            }
+            
+            void remove() {
+                throw new UnsupportedOperationException() 
+            }
+        }
+    }
+    
+    /**
+     * Return a virtual List of Maps that behaves as a real, read-only
+     * list of rows inside this Matrix.
+     * <p>
+     * The rows are created and returned lazily as they are accessed. Therefore 
+     * there is no issue with generating this for a large matrix. However operating on 
+     * such a list-map has an overhead with each row accessed that makes it quite
+     * inefficient compared to accessing rows on the raw Matrix, especially if you're
+     * going to access the data multiple times.
+     * <p>
+     * Note: for successful use of this method, give your matrix columns names
+     *       via the @names property.
+     * 
+     * @return  an object implmementing a List interface that reflects the contents of
+     *          this Matrix as rows and named columns.
+     */
+    List<Map> asListMap() {
+        return [
+            get : { i -> rowAsMap(i) },
+            size : { matrix.rowDimension },
+            isEmpty : { matrix.rowDimension == 0 },
+            iterator : { listMapIterator() }
+        ] as List
     }
 }
