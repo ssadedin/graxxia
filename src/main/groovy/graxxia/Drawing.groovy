@@ -482,6 +482,18 @@ class Drawing {
         return this
     }
     
+    Drawing plus(Drawable drawable) {
+        drawable.draw(this)
+    }
+    
+    Drawing rect(double x1, double y1, double x2, double y2) {
+        int tx1 = txX(x1)
+        int tx2 = txX(x2)
+        int ty1 = txY(y1)
+        int ty2 = txY(y2)
+        g.fillRect(Math.min(tx1, tx2), Math.min(ty1,ty2), Math.abs(tx2-tx1), Math.abs(ty2-ty1))
+    }
+    
     static void main(String [] args) {
         Drawing d = new Drawing("/Users/simon/test.png", 800,600, 10,0, 20, 10)
         d.log = true

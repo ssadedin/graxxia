@@ -1,4 +1,6 @@
 apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 project.ext {
   VERSION="0.0.1"
@@ -8,6 +10,10 @@ project.ext {
 
 repositories {
     mavenCentral()
+    maven {
+      name "gral"
+      url "http://mvn.erichseifert.de/maven2"
+    }
 }
 
 configurations {
@@ -28,18 +34,38 @@ dependencies {
 }
 
 // Bundle all dependencies into output library
+     compile files(fileTree(dir:'lib', includes:['*.jar']))
+}
+
+// Bundle all dependencies into output library
 jar {
-    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    exclude "groovy/**"
-    exclude "org/codehaus/**"
-    exclude "META-INF/groovy*"
-    exclude "META-INF/**/*groovy*"
-    exclude "META-INF/BCKEY*"
-    exclude "org/bouncycastle/**"
+    if(!System.properties.lean) {
+        from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        exclude "groovy/**"
+        exclude "org/codehaus/**"
+        exclude "META-INF/groovy*"
+        exclude "META-INF/**/*groovy*"
+        exclude "META-INF/BCKEY*"
+        exclude "org/bouncycastle/**"
+    }
 }
 
 groovydoc {
     
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
 }
 
 task doc << {
@@ -54,3 +80,75 @@ task wrapper(type: Wrapper) {
     gradleVersion = '1.4'
 }
 
+signing {
+    sign configurations.archives
+}
+
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      //The publication doesn't know about our dependencies, so we have to manually add them to the pom
+      pom.withXml {
+            def dependenciesNode = asNode().appendNode('dependencies')
+
+            //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+            configurations.compile.allDependencies.grep { it.group && it.version }.each {
+                def dependencyNode = dependenciesNode.appendNode('dependency')
+                dependencyNode.appendNode('groupId', it.group)
+                dependencyNode.appendNode('artifactId', it.name)
+                dependencyNode.appendNode('version', it.version)
+            }
+        }
+
+      pom.artifactId = 'graxxia'
+      pom.version  = "1.0.1"
+
+      println "POM Version is $pom.version"
+
+      pom.project {
+        name 'Graxxia'
+        packaging 'jar'
+
+        // optionally artifactId can be defined here 
+        groupId 'org.graxxia'
+        
+        description 'A application used as an example on how to set up pushing  its components to the Central Repository.'
+
+        url 'http://graxxia.org'
+
+        scm {
+          connection 'scm:git:git@github.com:ssadedin/graxxia.git'
+          developerConnection 'scm:git:git@github.com:ssadedin/graxxia.git'
+          url 'git@github.com:ssadedin/graxxia.git'
+        }
+
+        licenses {
+          license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+
+        developers {
+          developer {
+            id 'ssadedin'
+            name 'Simon Sasdedin'
+            email 'ssadedin@gmail.com'
+          }
+        }
+      }
+      // pom.writeTo("test.pom.2.xml")
+    }
+  }
+}

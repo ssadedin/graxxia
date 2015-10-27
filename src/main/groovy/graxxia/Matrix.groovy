@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.xlson.groovycsv.PropertyMapper
 import groovy.lang.Closure;
 import groovy.transform.CompileStatic;
 
@@ -120,6 +121,14 @@ class Matrix extends Expando implements Iterable, Serializable {
         this.names = columns.collect { MatrixColumn c -> c.name }
     }
     
+    /**
+     * Create a Matrix from a map of columns.
+     * <p>
+     * The keys in the map are treated as column names, while the values
+     * are iterated to obtain values.
+     * 
+     * @param sourceColumns
+     */
     Matrix(Map<String,Iterable> sourceColumns) {
         initFromMap(sourceColumns)
     }
@@ -133,35 +142,69 @@ class Matrix extends Expando implements Iterable, Serializable {
     void initFromMap(Map<String,Iterable> sourceColumns) {
         int rows = sourceColumns.iterator().next().value.size()
         
-        List<String> numerics = sourceColumns.grep { Map.Entry e ->
-            e.value[0] instanceof Number
-        }*.key
-        
+       
         final int cols = numerics.size()
         double[][] newData =  new double[rows][]
-        List<Iterator> iters = numerics.collect { col -> sourceColumns[col].iterator() }
+        
+        def numerics = sourceColumns.grep { sniffIsNumeric(it.value) }*.key 
+        
+        List<Iterator> iters = sourceColumns.grep { it.key in numerics }.collect { it.value.iterator() }
+        
         for(int i=0; i<rows;++i) {
             newData[i] = iters.collect { (double)it.next() } as double[]
         }
-        matrix = new Array2DRowRealMatrix(newData,false)
-        this.names = numerics
         
-        sourceColumns.each { Map.Entry e ->
-            if(!(e.key in numerics)) {
-                setProperty(e.key, e.value)
-            }
+        matrix = new Array2DRowRealMatrix(newData,false)
+        sourceColumns.grep { !(it.key in numerics) }.each { e ->
+            this[e.key] = e.value as List
         }
+        this.@names = numerics
     }
-  
+    
+    @CompileStatic
+    boolean sniffIsNumeric(Iterable iterable) {
+        int i=0
+        Iterator iter = iterable.iterator()
+        while(i<5 && iter.hasNext()) {
+            if(!(iter.next() instanceof Number))
+                return false
+        }
+        return true
+    }
+    
+    public Matrix(CSV csv) {
+        Iterator i = csv.iterator()
+        def r0 = i.next()
+        initFromIterator(i, r0, r0.columns*.key)        
+    }
+    
+    public Matrix(TSV tsv) {
+        Iterator i = tsv.iterator()
+        def r0 = i.next()
+        initFromIterator(i, r0, r0.columns*.key)
+    }
     
     public Matrix(Iterable<Iterable> rows, List<String> columnNames=null) {
+        Iterator rowIterator = rows.iterator()
+        if(!rowIterator.hasNext())
+            this.matrix = new Array2DRowRealMatrix([[]] as double[][], false)
+        def r0 = rowIterator.next()
+        initFromIterator(rowIterator,r0,columnNames)
+    }
+    
+    public initFromIterator(Iterator<Iterable> rows, def r0, List<String> columnNames=null) {
+        
+        // new File("/Users/simon/test.txt").text = (new Date()).toString() + " : graxxia test"
+        
         List data = new ArrayList(4096)
         int rowCount = 0
-        
         List<Boolean> isNumerics
-        def r0 = rows[0]
-        if(rows[0] instanceof Iterable) {
+        if(r0 instanceof Iterable) {
             isNumerics = r0.collect { it instanceof Number }
+        }
+        else
+        if(r0 instanceof PropertyMapper) {
+            isNumerics = r0.values.collect { it instanceof Number }
         }
         else {
             isNumerics = [true] * r0.size()
@@ -174,12 +217,15 @@ class Matrix extends Expando implements Iterable, Serializable {
         List<List> nonNumerics = isNumerics.grep { !it }.collect { [] }
         
         int rowIndex = 0
-        for(row in rows) {
+        def row = r0
+        while(true) {
+            
             int colIndex = 0
             int numericColumnIndex = 0
             int nonNumericColumnIndex = 0
             double[] rowNumericValues = new double[matrixColumnCount]
-            for(value in row) {  
+            def rowValues = row instanceof PropertyMapper ? row.values : row
+            for(value in rowValues) {  
                 if(isNumerics[colIndex]) {
                     rowNumericValues[numericColumnIndex++] = (double)value
                 }
@@ -189,6 +235,11 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
             ++rowIndex
             data.add(rowNumericValues)
+            
+            if(!rows.hasNext())
+                break
+                
+            row = rows.next()
         }
         
         matrix = new Array2DRowRealMatrix((double[][])data.toArray(), false)
@@ -405,7 +456,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         return results
     }    
-    
+   
     @CompileStatic
     public List<Number> findIndexValues(Closure c) {
         List<Integer> keepRows = []

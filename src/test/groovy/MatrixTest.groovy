@@ -372,6 +372,7 @@ class MatrixTest {
         assert grouped.black.rowDimension == 1
         
         assert grouped.black.age == [7]
+        assert grouped.black.color[0] == "black"
     }
     
     @Test
@@ -437,4 +438,172 @@ class MatrixTest {
         assert m.bar[1] == 1
         assert m.dog[2] == "pup"
     }
+    
+    @Test
+    void testMax() {
+        def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+        
+        def mMax =  m.max { x1 + x2 }
+        assert mMax.rowDimension == 1
+        assert mMax[0] == [5,10,3]
+    }
+    
+    @Test
+    void testFind() {
+        def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+        
+        def mFound =  m.find { x1 + x2 > 5 }
+        assert mFound.rowDimension == 1
+        assert mFound[0] == [2,4,6]
+        
+        println mFound.x1
+    } 
+    
+    @Test
+    void testFindAll() {
+        def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+        
+        def mFound =  m.findAll { x1 + x2 > 7 }
+        assert mFound.rowDimension == 3
+        assert mFound[0] == [3,6,5]
+        
+        println mFound.x1
+    }  
+    
+    @Test
+    void testUnique() {
+        def m = new Matrix(x1: [1,2,1,4,5], 
+                           x2: [2,4,2,8,10], 
+                           x3: [7,6,5,4,3])
+        
+        def u = m.unique { x1 + x2 }
+        
+        println "Result = " + u
+        
+        assert u.rowDimension == 4
+        assert u[2] == [4,8,4]
+    }
+    
+    @Test
+    void testSort() {
+        def m = new Matrix(x1: [1,2,1,4,5], x2: [2,4,2,8,10], x3:[7,6,5,4,3])
+        
+        def u = m.sort { x1 + x2 }
+        
+        assert u.rowDimension == 5
+        assert u[0] == [1,2,7]
+        assert u[1] == [1,2,5]
+        assert u[2] == [2,4,6]
+    } 
+    
+    /*
+     * what is the right form for aggregate?
+     */
+    @Test
+    void testAggregateBy() {
+        def m = new Matrix(x1: [1,2,1,4,5,7], 
+                           x2: [2,4,2,8,10,8], 
+                           x3: [7,6,5,4,3,5])
+        
+        m.foo = ["joe","chris","bob", "chris","ted","chris"]
+        m.pet = ["cat","dog","dog", "giraffe","dog","dog"]
+       
+        Matrix m4 = m.aggregateBy(person: { foo }, pet: { pet }) {
+            mean Stats.mean(x1)
+        }
+        println "Aggregated by foo AND pet: " + m4
+        
+        assert m4.grep { person == 'chris' && pet == 'dog' }.mean == 4.5
+        
+        Matrix m5 = m.aggregateBy('foo','pet') {
+            mean Stats.mean(x1)
+        }
+        println "Aggregated by foo AND pet: " + m5 
+        
+        assert m5.grep { foo == 'chris' && pet == 'dog' }.mean == 4.5
+        
+        Matrix m6 = m.aggregateBy('foo') {
+            pets pet.unique().join(",")
+            sum x1.sum()
+        }
+        
+        println "Non-numeric aggregation: " + m6
+        
+        assert m6.grep { foo == 'chris' }.pets[0] == "dog,giraffe"
+    }
+    
+     
+    @Test
+    void testAggregate() {
+        def m = new Matrix(x1: [1,2,1,4,5], 
+                           x2: [2,4,2,8,10], 
+                           x3: [7,6,5,4,3])
+        
+        m.foo = ["joe","chris","bob", "chris","ted"]
+        m.pet = ["cat","dog","dog", "giraffe","dog"]
+        
+        Matrix m2 = m.aggregate { 
+            mean Stats.mean(x1)
+            sd   Stats.from((x2)).standardDeviation
+        }
+        
+        println "Aggregated matrix = " + m2
+        
+        Matrix m3 = m.aggregateBy(person:{ foo }) {
+            mean Stats.mean(x1)
+            sd   Stats.from(x2).standardDeviation
+        }
+    }
+    
+    @Test
+    void testAsListMap() {
+        def m = new Matrix(x1: [1,2,1,4,5], x2: [2,4,2,8,10], x3:[7,6,5,4,3])
+        m.foo = ["joe","fred","bob", "chris","ted"]
+        
+        def map = m.rowAsMap(2)
+        assert map.foo == "bob"
+        assert map.x1 == 1
+        assert map.x2 == 2
+        assert map.x3 == 5
+        
+        map = m.listMapIterator()[2]
+        assert map.foo == "bob"
+        assert map.x1 == 1
+        assert map.x2 == 2
+        assert map.x3 == 5
+  
+    }
+    
+    @Test
+    void testFromTSV() {
+        
+        new File('test.tsv').text = [
+            ['name','bar','cat'],
+            ['fred',1.0, 'megsy'],
+            ['joe',2.0, 'abigail']
+        ]*.join('\t').join('\n')
+        
+        TSV tsv = new TSV("test.tsv")
+        Matrix m = new Matrix(tsv)
+        
+        assert m.rowDimension == 2
+        assert m.name[1] == 'joe'
+        assert m.bar[1] == 2.0
+    }
+    
+    @Test 
+    void testRecycling() {
+        def raw = new URL("https://data.cityofnewyork.us/api/views/ebb7-mvp5/rows.csv?accessType=DOWNLOAD").openStream().text
+        def csv = { new CSV(new StringReader(raw)) }
+        Matrix m = new Matrix(csv())
+    }
+    
+    /*
+     * Sadly, count using a closure is not implemented for arrays in groovy
+    @Test
+    void testCount() {
+        Matrix m = new Matrix([[0,2,3],[4,0,0]])
+        assert m.collect { counts -> println(counts); counts.count { it < 1 } } == [1,2]
+    }
+    */
 }
