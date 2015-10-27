@@ -388,4 +388,21 @@ class Stats extends DescriptiveStatistics {
         }
         return s
     }
+    
+    Object asType(Class clazz) {
+        if(clazz == Map) {
+            return [
+                n : this.n,
+                min : this.min,
+                max : this.max, 
+                mean : this.mean, 
+                stddev : this.standardDeviation,
+                median : this.getPercentile(50),
+                kurtosis : this.getKurtosis(),
+                skewness : this.getSkewness() 
+            ]
+        }
+        else
+            return super.asType(clazz)
+    }
 }
