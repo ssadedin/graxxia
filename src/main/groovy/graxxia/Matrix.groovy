@@ -121,17 +121,36 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     Matrix(Map<String,Iterable> sourceColumns) {
-        
+        initFromMap(sourceColumns)
+    }
+    
+    static Matrix fromMap(Map<String,Iterable> sourceColumns) {
+        Matrix m = new Matrix([[0] as double[]] as double[][]);
+        m.initFromMap(sourceColumns)
+        return m
+    }
+    
+    void initFromMap(Map<String,Iterable> sourceColumns) {
         int rows = sourceColumns.iterator().next().value.size()
         
-        final int cols = sourceColumns.size()
+        List<String> numerics = sourceColumns.grep { Map.Entry e ->
+            e.value[0] instanceof Number
+        }*.key
+        
+        final int cols = numerics.size()
         double[][] newData =  new double[rows][]
-        List<Iterator> iters = sourceColumns.collect { it.value.iterator() }
+        List<Iterator> iters = numerics.collect { col -> sourceColumns[col].iterator() }
         for(int i=0; i<rows;++i) {
             newData[i] = iters.collect { (double)it.next() } as double[]
         }
         matrix = new Array2DRowRealMatrix(newData,false)
-        this.names = sourceColumns*.key
+        this.names = numerics
+        
+        sourceColumns.each { Map.Entry e ->
+            if(!(e.key in numerics)) {
+                setProperty(e.key, e.value)
+            }
+        }
     }
   
     

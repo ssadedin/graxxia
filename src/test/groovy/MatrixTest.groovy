@@ -292,9 +292,26 @@ class MatrixTest {
             )
         
         assert m[2][1] == 7
-        
         assert m.frog[1] == 4
+        
+        m = Matrix.fromMap([hello:[1,2,3], world:[3,4,5]])
+        
+        assert m[0][0] == 1
+        
     }
+    
+    @Test
+    void testInitFromMapNonNumeric() {
+        
+        Matrix gapMetrics = new Matrix(
+            metric: ["NewGapSize","RemovedGapSize","CaptureSize","PercTargetDiff","NetGapChange","NetGapChangePerc"],
+            value: [1,2,3,4,5,6]
+        )
+       
+        assert gapMetrics[0][0] == 1
+        assert gapMetrics.metric[0] == "NewGapSize"
+    }
+  
     
     @Test
     void testMarkdown() {
