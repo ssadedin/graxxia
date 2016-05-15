@@ -435,7 +435,7 @@ class Matrix extends Expando implements Iterable, Serializable {
                 ++rowIndex
             }
         }
-        return keepRows
+        return (List<Number>) keepRows
     }
         
     /**
