@@ -1,4 +1,8 @@
 apply plugin: 'groovy'
+apply plugin: 'java'
+
+sourceSets.main.java.srcDirs = []
+sourceSets.main.groovy.srcDirs += ["src/main/java"]
 
 project.ext {
   VERSION="0.0.1"
@@ -51,6 +55,6 @@ task doc << {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.4'
+    gradleVersion = '2.0'
 }
 
