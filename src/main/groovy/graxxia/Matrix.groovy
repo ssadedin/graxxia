@@ -905,7 +905,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         
         if(matrix.rowDimension<DISPLAY_ROWS) {
-            return "${matrix.rowDimension}x${matrix.columnDimension} Matrix:\n"+ 
+            return "${matrix.rowDimension}x${matrix.columnDimension + this.properties.size()} Matrix:\n"+ 
                 headers + 
                 matrix.data.collect { row -> 
                     printRow(row)
@@ -913,7 +913,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         else {
             int omitted = matrix.rowDimension-DISPLAY_ROWS
-            String value = "${matrix.rowDimension}x${matrix.columnDimension} Matrix:\n"+ 
+            String value = "${matrix.rowDimension}x${matrix.columnDimension + this.properties.size()} Matrix:\n"+ 
                 headers + 
                 matrix.data[0..DISPLAY_ROWS/2].collect(printRow).join("\n")  
             rowCount += omitted -1    
