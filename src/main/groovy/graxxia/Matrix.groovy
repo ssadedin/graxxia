@@ -144,24 +144,31 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     void initFromMap(Map<String,Iterable> sourceColumns) {
         int rows = sourceColumns.iterator().next().value.size()
-        
-       
-        final int cols = numerics.size()
         double[][] newData =  new double[rows][]
-        
-        def numerics = sourceColumns.grep { sniffIsNumeric(it.value) }*.key 
-        
+        List<String> numerics = sourceColumns.grep { sniffIsNumeric(it.value) }*.key 
+        final int cols = numerics.size()
         List<Iterator> iters = sourceColumns.grep { it.key in numerics }.collect { it.value.iterator() }
         
         for(int i=0; i<rows;++i) {
             newData[i] = iters.collect { (double)it.next() } as double[]
         }
         
-        matrix = new Array2DRowRealMatrix(newData,false)
+        List<List> nonNumericValues = []
         sourceColumns.grep { !(it.key in numerics) }.each { e ->
-            this[e.key] = e.value as List
+            List listValue = e.value as List
+            this[e.key] = listValue
+            nonNumericValues << listValue
         }
-        this.@names = numerics
+        
+        if(numerics.size()>0) {
+            matrix = new Array2DRowRealMatrix(newData,false)
+            this.@names = numerics
+        }
+        else {
+            if(nonNumericValues.size()>0) {
+                matrix = new ZeroColumnMatrix(nonNumericValues[0].size())
+            }
+        }
     }
     
     @CompileStatic
@@ -398,9 +405,11 @@ class Matrix extends Expando implements Iterable, Serializable {
         i.each { Number n -> indices.add(n.toInteger()) }
         
         double [][] result = new double[indices.size()][this.matrix.columnDimension]
-        int destRowIndex = 0
-        for(int srcRowIndex in indices) {
-            System.arraycopy(this.matrix.dataRef[srcRowIndex], 0, result[destRowIndex++], 0, this.matrix.columnDimension)
+        if(this.matrix.columnDimension>0) {
+            int destRowIndex = 0
+            for(int srcRowIndex in indices) {
+                System.arraycopy(this.matrix.dataRef[srcRowIndex], 0, result[destRowIndex++], 0, this.matrix.columnDimension)
+            }
         }
         return result
     }
@@ -507,12 +516,24 @@ class Matrix extends Expando implements Iterable, Serializable {
 
         double [][] submatrix = this.subsetRows((Iterable<Number>)keepRows)
         
-        def result = new Matrix(new Array2DRowRealMatrix(submatrix))
+        def result = new Matrix(newRealMatrix(submatrix))
         result.@names = this.@names
         if(!this.properties.isEmpty()) 
             this.transferPropertiesToRows(result, keepRows)
         return result
     }    
+    
+    Array2DRowRealMatrix  newRealMatrix(double [][] dMatrix) {
+        if(dMatrix.size() == 0) {
+            return new ZeroColumnMatrix(0)
+        }
+        else 
+        if(dMatrix[0].size() == 0) {
+            return new ZeroColumnMatrix(dMatrix.size())
+        }
+        else
+            return new Array2DRowRealMatrix(dMatrix)        
+    }
     
     private void transferPropertiesToRows(Matrix result, List<Number> indices = null) {
         if(indices != null) {
@@ -864,7 +885,12 @@ class Matrix extends Expando implements Iterable, Serializable {
        
         int rowCount = 0
         def printRow = { row ->
-           List cells = (row as List)
+            
+           List cells
+           if(row == null)
+                cells = []
+           else 
+               cells = (row as List)
            if(this.properties) {
                cells = this.properties.collect { it.value?it.value[rowCount]:"null" } + cells
            }

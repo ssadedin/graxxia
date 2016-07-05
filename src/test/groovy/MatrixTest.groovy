@@ -606,4 +606,27 @@ class MatrixTest {
         assert m.collect { counts -> println(counts); counts.count { it < 1 } } == [1,2]
     }
     */
+
+    
+    @Test
+    void testNoNumeric() {
+        
+        Matrix m = new Matrix([ 
+            foo: ["cat","dog","tree","bird","orange"],
+            type: ["animal","animal", "plant","animal","plant"]
+        ])
+        
+        
+        assert m.foo == ["cat","dog","tree","bird","orange"]
+        
+        
+       def x = m.grep { type == "animal" }
+       
+       println "After grep for animal: " + x
+        
+        assert m.grep { type == "animal" }.foo == ["cat","dog","bird"]
+        
+        assert m.countBy { type } == [ "animal" : 3, "plant" : 2]
+        
+    }
 }
