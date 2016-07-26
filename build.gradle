@@ -7,7 +7,7 @@ sourceSets.main.groovy.srcDirs += ["src/main/java"]
 project.ext {
   VERSION="0.0.1"
   STAGE="build/stage/graxxia-$VERSION"
-  GROOVY_VERSION="2.4.5"
+  GROOVY_VERSION="2.4.6"
 }
 
 repositories {
