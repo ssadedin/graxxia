@@ -123,7 +123,11 @@ class TSV implements Iterable {
         
         Iterator i = newIterator()
         
-        List columnTypes = options.columnTypes
+        def customColumnTypes = options.columnTypes
+        
+        List columnTypes = null
+        if(customColumnTypes instanceof List)
+            columnTypes = customColumnTypes
         
         new Iterator() {
             boolean hasNext() {
@@ -135,19 +139,24 @@ class TSV implements Iterable {
                 
                 if(!columnTypes) {
                     columnTypes = [String] * line.values.size()
+                    
                     line.values.eachWithIndex  { v, index ->
-                        if(v.isInteger())
-                            columnTypes[index] = Integer
-                        else
-                        if(v.isDouble())
-                            columnTypes[index] = Double
-                        else
-                        if(v in ["true","false"])
-                            columnTypes[index] = Boolean
+                        if(customColumnTypes instanceof Map && customColumnTypes.containsKey(index))
+                            columnTypes[index] = customColumnTypes[index]
                         else {
-                            for(f in formats) {
-                                if(f.sniff(v)) {
-                                    columnTypes[index] = f
+                            if(v.isInteger())
+                                columnTypes[index] = Integer
+                            else
+                            if(v.isDouble())
+                                columnTypes[index] = Double
+                            else
+                            if(v in ["true","false"])
+                                columnTypes[index] = Boolean
+                            else {
+                                for(f in formats) {
+                                    if(f.sniff(v)) {
+                                        columnTypes[index] = f
+                                    }
                                 }
                             }
                         }
