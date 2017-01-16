@@ -257,6 +257,10 @@ class TSV implements Iterable {
     static getReader(String fileName) {
        fileName.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader()  
     }
+    
+    List<Map> toListMap() {
+        this.collect { [ it.columns*.key, it.values ].transpose().collectEntries() }
+    }
 }
 
 class CSV extends TSV {
