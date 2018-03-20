@@ -177,11 +177,9 @@ class TSV implements Iterable {
     @CompileStatic
     List<Object> convertColumns(String [] values, List columnTypes) {
         List<Object> newValues = values as List
-        final int numColumns = columnTypes.size()
+        final int numColumns = Math.min(columnTypes.size(), values.size())
         for(int index = 0; index<numColumns; ++index) {
             def type = columnTypes[index]
-            if(values.size()<=index)
-                return
             try {
                 if(type instanceof Class)
                     newValues[index] = values[index].asType((Class)type)
