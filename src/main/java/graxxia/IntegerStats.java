@@ -8,6 +8,8 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
+import groovy.transform.CompileStatic;
+
 /**
  * An efficient method to calculate percentiles of integer values
  * that doesn't require holding them all in memory or sorting them.
@@ -72,7 +74,7 @@ public class IntegerStats extends SummaryStatistics {
      * Count the given coverage value in calculating the median
      * @param coverage
      */
-    void addValue(int coverage) {
+    public void addValue(int coverage) {
         if(coverage>=values.length)
             ++values[values.length-1];
         else
@@ -81,6 +83,17 @@ public class IntegerStats extends SummaryStatistics {
         super.addValue(coverage);
         ++total;
     }
+    
+    public void addIntValue(int coverage) {
+        if(coverage>=values.length)
+            ++values[values.length-1];
+        else
+            ++values[coverage];
+        
+        super.addValue(coverage);
+        ++total;
+    }
+  
     
     /**
      * Return the specified percentile from the observed coverage counts

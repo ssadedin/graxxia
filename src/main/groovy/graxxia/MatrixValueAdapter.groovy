@@ -53,7 +53,7 @@ class NumberMatrixValueAdapter implements MatrixValueAdapter<Double> {
     }
 }
 
-class StringMatrixValueAdapter implements MatrixValueAdapter<String> {
+class StringMatrixValueAdapter implements MatrixValueAdapter<Object> {
 
     @Override
     public boolean sniff(Object value) {
@@ -61,8 +61,8 @@ class StringMatrixValueAdapter implements MatrixValueAdapter<String> {
     }
 
     @Override
-    public String serialize(String obj) {
-        return obj
+    public String serialize(Object obj) {
+        return String.valueOf(obj)
     }
 
     @Override
