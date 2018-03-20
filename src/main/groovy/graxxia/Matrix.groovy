@@ -846,7 +846,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
-    static Matrix load(String fileName) {
+    static Matrix load(Map options = [:], String fileName) {
         List rows = new ArrayList(1024)
         
         Reader r = new FileReader(fileName)
@@ -855,6 +855,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         String firstLine = r.readLine()
         List names
         if(firstLine.startsWith('#')) {
+            names = firstLine.substring(1).trim().split("\t")
+        }
+        else
+        if(options.r) {
             names = firstLine.substring(1).trim().split("\t")
         }
         else {
