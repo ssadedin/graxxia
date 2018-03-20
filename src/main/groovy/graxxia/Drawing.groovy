@@ -467,7 +467,7 @@ class Drawing {
                    
         def yTickPoints = yAxis.collect { txY(it) }
             
-        save {
+        def draw = {
             g.setStroke(DASHED)
             lines([minX[0]] * (yAxis.size()-2), yAxis[1..-2], [maxX[-1]]*(yAxis.size()-2), yAxis[1..-2])
             g.setStroke(SOLID)
@@ -478,6 +478,12 @@ class Drawing {
                 text(xMargin-40, it[1], it[0])
             }
         }
+        
+        if(autoSave)
+            save(draw)
+        else
+            draw()
+        
         coordType = Drawing.Coord.PLOT
         return this
     }
