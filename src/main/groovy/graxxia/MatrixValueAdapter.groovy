@@ -35,15 +35,16 @@ interface MatrixValueAdapter<T> {
     T deserialize(Object obj) throws ParseException
 }
 
-class NumberMatrixValueAdapter implements MatrixValueAdapter<Double> {
+class NumberMatrixValueAdapter implements MatrixValueAdapter<Number> {
 
     @Override
     public boolean sniff(Object value) {
         return value instanceof Number
     }
+    
 
     @Override
-    public String serialize(Double obj) {
+    public String serialize(Number obj) {
         return String.valueOf(obj);
     }
 

@@ -30,6 +30,7 @@ import groovy.transform.CompileStatic;
  *
  * @author simon.sadedin@mcri.edu.au
  */
+@CompileStatic
 class MatrixColumn implements Iterable {
     
     int columnIndex
@@ -44,13 +45,12 @@ class MatrixColumn implements Iterable {
     
     Object getAt(Object index) {
         if(index instanceof Integer)
-            sourceMatrix.dataRef[index][columnIndex]
+            sourceMatrix.matrix.dataRef[(int)index][columnIndex]
         else
         if(index instanceof List)
-            sourceMatrix.dataRef[index].collect { it[columnIndex] }
+            sourceMatrix.matrix.dataRef[(List)index].collect { double [] values ->  values[columnIndex] }
     }
     
-    @CompileStatic
     double getDoubleAt(int index) {
         return sourceMatrix.matrix.dataRef[index][columnIndex]
     }

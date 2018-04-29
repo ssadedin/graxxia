@@ -145,7 +145,11 @@ class Matrix extends Expando implements Iterable, Serializable {
     void initFromMap(Map<String,Iterable> sourceColumns) {
         int rows = sourceColumns.iterator().next().value.size()
         double[][] newData =  new double[rows][]
-        List<String> numerics = sourceColumns.grep { sniffIsNumeric(it.value) }*.key 
+        List<String> numerics = sourceColumns.grep { 
+            def result = this.sniffIsNumeric(it.value) 
+            return result
+        }*.key 
+        
         final int cols = numerics.size()
         List<Iterator> iters = sourceColumns.grep { it.key in numerics }.collect { it.value.iterator() }
         
@@ -169,6 +173,16 @@ class Matrix extends Expando implements Iterable, Serializable {
                 matrix = new ZeroColumnMatrix(nonNumericValues[0].size())
             }
         }
+    }
+    
+    @CompileStatic
+    boolean sniffIsNumeric(int [] values) {
+        true
+    } 
+    
+    @CompileStatic
+    boolean sniffIsNumeric(double [] values) {
+        true
     }
     
     @CompileStatic
@@ -808,11 +822,18 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
+    @CompileStatic
     void save(Map options = [:], Writer w) {
         
-        List nonMatrixCols = this.properties*.key 
+        List nonMatrixCols = (List)this.properties*.key 
         
-        List columnNames = nonMatrixCols + (this.names?:this.properties.names)
+        List matrixCols = this.@names
+        if(!matrixCols && this.properties.containsKey('names'))
+            matrixCols = (List)this.properties.names
+            
+        
+        List columnNames = (List)this.properties*.key 
+        columnNames.addAll(matrixCols)
         
         // NOTE: the this.properties.names seems to be required because of a 
         // weird bug where groovy will prefer to set an expando property rather than
@@ -826,20 +847,30 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(this.rowDimension == 0)
             return
         
-        List<MatrixValueAdapter> adapters = TSV.formats + [
+        List<MatrixValueAdapter> adapters = TSV.formats + (List<MatrixValueAdapter>) [
            new NumberMatrixValueAdapter(),
            new StringMatrixValueAdapter()
         ] 
+        
+        Matrix me = this
        
         List<MatrixValueAdapter> types = nonMatrixCols.collect { colName ->
-            adapters.find { adapter -> adapter.sniff(getProperty(colName)[0]) }
+            adapters.find { MatrixValueAdapter adapter -> 
+                println "Find adapter for $colName"
+                Iterable col = (Iterable)me.getProperty((String)colName)
+                adapter.sniff(col.getAt(0)) 
+            }
         }
         
         eachRow { row ->
-            def d = delegate
+            IterationDelegate d = (IterationDelegate)delegate
             if(nonMatrixCols) {
-                nonMatrixCols.eachWithIndex { colName, colIndex -> 
-                    w.print((types[colIndex].serialize(d[colName])) + "\t") 
+                nonMatrixCols.eachWithIndex { colNameValue, colIndexValue -> 
+                    String colName = (String)colNameValue
+                    int colIndex = colIndexValue
+                    MatrixValueAdapter adapter = types[colIndex]
+                    Object value = d.propertyMissing(colName)
+                    w.print(adapter.serialize(value) + "\t") 
                 }
             }
             w.println((row as List).join("\t"))
