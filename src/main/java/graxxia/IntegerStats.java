@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 
+import org.apache.commons.math3.exception.MathIllegalArgumentException;
+import org.apache.commons.math3.stat.descriptive.StorelessUnivariateStatistic;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import groovy.transform.CompileStatic;
@@ -48,6 +50,49 @@ public class IntegerStats extends SummaryStatistics {
     public IntegerStats(int maxPercentileValue) {
         values = new int[maxPercentileValue];
         Arrays.fill(values, 0);
+        this.setSumLogImpl(new StorelessUnivariateStatistic() {
+            
+            @Override
+            public double evaluate(double[] values, int begin, int length) throws MathIllegalArgumentException {
+                return 0;
+            }
+            
+            @Override
+            public double evaluate(double[] values) throws MathIllegalArgumentException {
+                return 0;
+            }
+            
+            @Override
+            public void incrementAll(double[] values, int start, int length) throws MathIllegalArgumentException {
+            }
+            
+            @Override
+            public void incrementAll(double[] values) throws MathIllegalArgumentException {
+            }
+            
+            @Override
+            public void increment(double d) {
+            }
+            
+            @Override
+            public double getResult() {
+                return 0;
+            }
+            
+            @Override
+            public long getN() {
+                return 0;
+            }
+            
+            @Override
+            public StorelessUnivariateStatistic copy() {
+                return null;
+            }
+            
+            @Override
+            public void clear() {
+            }
+        });
     }
     
     public IntegerStats(int maxPercentileValue, InputStream inStream) throws IOException {
