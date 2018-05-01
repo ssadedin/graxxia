@@ -180,10 +180,35 @@ public class IntegerStats extends SummaryStatistics {
         return -1;
     }
     
+    /**
+     * @param   threshold
+     * @return  the fraction of values above given threshold
+     */
+    @CompileStatic
+    public double fractionAbove(int threshold) {
+        final int numValues = values.length;
+        int above = 0;
+        for(int i=threshold; i<numValues; ++i) {
+            above += values[i];
+        }
+        return ((double)above) / getN();
+    }
+     
+    /**
+     * @param coverageDepth
+     * @return  the percentage of values above given threshold
+     */
+    @CompileStatic
+    public double percentageAbove(int coverageDepth) {
+        return 100d*fractionAbove(coverageDepth);
+    }
+    
+    @CompileStatic
     public int getMedian() {
         return getPercentile(50);
     }
     
+    @CompileStatic
     public int getAt(int percentile) {
         return getPercentile(percentile);
     }
