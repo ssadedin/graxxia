@@ -15,6 +15,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 import com.xlson.groovycsv.PropertyMapper
 import groovy.lang.Closure;
@@ -822,6 +824,22 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
+    void saveBinary(String fileName) {
+        ObjectOutputStream oStream = new ObjectOutputStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(fileName), 1024*1024)))
+        oStream.withStream { ObjectOutputStream o -> 
+            o << this.matrix.dataRef
+        }
+    }
+    
+    static Matrix readBinary(String fileName) {
+        ObjectInputStream iStream = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(new FileInputStream(fileName), 1024*1024)))
+        double [][] data = null
+        iStream.withStream { ObjectInputStream o ->
+            data = iStream.readObject()
+        }
+        return new Matrix(data)
+    } 
+   
     @CompileStatic
     void save(Map options = [:], Writer w) {
         
