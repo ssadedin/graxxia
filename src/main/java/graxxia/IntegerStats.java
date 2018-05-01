@@ -157,13 +157,13 @@ public class IntegerStats extends SummaryStatistics {
      * @return the specified percentile, if it is smaller than the max value passed in the
      *         constructor.
      */
-    int getPercentile(int percentile) {
+    public int getPercentile(int percentile) {
         int observationsPassed = 0;
         int lowerValue = -1;
-        final int medianIndex = (int)((float)total / (100f/(float)percentile));
+        final int percentileIndex = (int)((float)total / (100f/(float)percentile));
         for(int i=0; i<values.length; ++i) {
             observationsPassed += values[i];
-            if(observationsPassed >= medianIndex) {
+            if(observationsPassed >= percentileIndex) {
                 if(total%2 == 0) {
                     // Find the next value and return average of this one and that
                     lowerValue = i;
