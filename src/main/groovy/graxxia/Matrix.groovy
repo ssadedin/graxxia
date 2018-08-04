@@ -119,7 +119,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         MatrixColumn [] columns = sourceColumns
         for(int i=0; i<rows;++i) {
             double [] row = newData[i]
-            for(int j=0; j<++cols;++j)
+            for(int j=0; j<cols;++j)
                 row[j] = (double)(columns[j].getDoubleAt(i))
         }
         matrix = new Array2DRowRealMatrix(newData,false)
