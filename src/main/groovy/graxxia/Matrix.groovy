@@ -1233,7 +1233,7 @@ class Matrix extends Expando implements Iterable, Serializable {
   
            
         List<String> columnNames = aggregated.iterator().next().value.getAllColumnNames()
-        Map<List> columns = [:] 
+        Map<String,List> columns = [:] 
         
         int i=0
         groups.each { groupName, groupClosure ->
