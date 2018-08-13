@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.apache.commons.math3.exception.MathIllegalArgumentException;
@@ -35,7 +36,7 @@ import groovy.transform.CompileStatic;
  * 
  * @author simon.sadedin@mcri.edu.au
  */
-public class IntegerStats extends SummaryStatistics {
+public class IntegerStats extends SummaryStatistics implements Serializable {
     
     private static final long serialVersionUID = 1L;
 

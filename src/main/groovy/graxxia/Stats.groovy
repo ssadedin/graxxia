@@ -47,7 +47,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  * 
  * @author simon.sadedin@mcri.edu.au
  */
-class Stats extends DescriptiveStatistics {
+class Stats extends DescriptiveStatistics implements Serializable {
 
     static final long serialVersionUID = 0L
 
