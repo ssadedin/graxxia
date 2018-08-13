@@ -44,15 +44,7 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
     
     int total = 0;
     
-    /**
-     * 
-     * @param maxPercentileValue
-     */
-    public IntegerStats(int maxPercentileValue) {
-        values = new int[maxPercentileValue];
-        Arrays.fill(values, 0);
-        this.setSumLogImpl(new StorelessUnivariateStatistic() {
-            
+    static class SerializableStorelessUnivariateStatistic implements StorelessUnivariateStatistic, Serializable {
             @Override
             public double evaluate(double[] values, int begin, int length) throws MathIllegalArgumentException {
                 return 0;
@@ -93,7 +85,20 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
             @Override
             public void clear() {
             }
-        });
+    };
+    
+    /**
+     * 
+     * @param maxPercentileValue
+     */
+    public IntegerStats(int maxPercentileValue) {
+        values = new int[maxPercentileValue];
+        Arrays.fill(values, 0);
+        
+        // This is because in benchmarking I found this statistic that I never use
+        // is very computationally intensive to compute. So I instead make a dummy that
+        // bypasses computing it.
+        this.setSumLogImpl(new SerializableStorelessUnivariateStatistic());
     }
     
     public IntegerStats(int maxPercentileValue, InputStream inStream) throws IOException {
