@@ -40,5 +40,13 @@ class IntegerStatsTest {
         values.each { c.addValue(it); d.addValue(it) }
         assert c.getPercentile(50) == d.getPercentile(50).toInteger()
     }
-
+    
+    @Test
+    void testBreakTieNoLarger() {
+        def values = [30]*10
+        def c = new IntegerStats(100)
+        def d = new DescriptiveStatistics()
+        values.each { c.addValue(it); d.addValue(it) }
+        assert c.getPercentile(50) == 30
+    }
 }

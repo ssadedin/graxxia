@@ -178,6 +178,8 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
                             return (lowerValue + k) / 2;
                         }
                     }
+                    // Now larger value to average - just return what we had
+                    return lowerValue;
                 }
                 else
                     return i;
