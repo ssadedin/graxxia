@@ -189,6 +189,18 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
     }
     
     /**
+     * Read values from standard input, converting them to integers and compiling
+     * an IntegerStats object from them.
+     * 
+     * @param values
+     * @return
+     * @throws IOException
+     */
+    static IntegerStats read(InputStream values) throws IOException {
+        return new IntegerStats(1000, System.in);
+    }
+    
+    /**
      * @param   threshold
      * @return  the fraction of values above given threshold
      */
