@@ -417,8 +417,8 @@ class Matrix extends Expando implements Iterable, Serializable {
      */
     @CompileStatic
     double[][] subsetRows(Iterable<Number> i) {
-        List<Integer> indices = new ArrayList(this.matrix.rowDimension)
-        i.each { Number n -> indices.add(n.toInteger()) }
+        List<Integer> indices = convertIndices(i)
+//        i.each { Number n -> indices.add(n.toIn0eger()) }
         
         double [][] result = new double[indices.size()][this.matrix.columnDimension]
         if(this.matrix.columnDimension>0) {
@@ -428,6 +428,15 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
         }
         return result
+    }
+
+    @CompileStatic
+    private List<Integer> convertIndices(Iterable i) {
+        List<Integer> indices = new ArrayList(this.matrix.rowDimension)
+        for(Number n : i) {
+            indices.add(n.toInteger())
+        }
+        return indices
     }
     
     @CompileStatic
@@ -486,7 +495,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     }    
    
     @CompileStatic
-    public List<Number> findIndexValues(Closure c) {
+    public List<Number> findIndexValues(Closure<Boolean> c) {
         List<Integer> keepRows = []
         int rowIndex = 0;
         IterationDelegate delegate = new IterationDelegate(this)
@@ -494,12 +503,13 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(withDelegate) {
             c = (Closure)c.clone()
             c.setDelegate(delegate)
+            c.setResolveStrategy(Closure.DELEGATE_FIRST)
         }
         if(c.maximumNumberOfParameters == 1) {
             for(double [] row in matrix.dataRef) {
                 if(withDelegate)
                     delegate.row = rowIndex
-                if(c(row))
+                if(c(row) != false)
                     keepRows.add(rowIndex)
                 ++rowIndex
             }
@@ -509,7 +519,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             for(double [] row in matrix.dataRef) {
                 if(withDelegate)
                     delegate.row = rowIndex 
-                if(c(row, rowIndex))
+                if(c(row, rowIndex) != false)
                     keepRows.add(rowIndex)
                 ++rowIndex
             }

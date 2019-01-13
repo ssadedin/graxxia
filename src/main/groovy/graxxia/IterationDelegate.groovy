@@ -9,9 +9,13 @@
  *  further details.
  */
 package graxxia
+
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class IterationDelegate {
     
-    Integer row = 0
+    int row = 0
     
 	Matrix host
     
@@ -19,14 +23,29 @@ class IterationDelegate {
         this.host = host
     }
     
-	def propertyMissing(String name) {
+    @CompileStatic
+    Object getProperty(String name) {
+        return resolve(name)
+    }
+    
+    @CompileStatic
+    Object resolve(String name) {
 		def column = host.getProperty(name)
 		if(column == null) {
 			if(name in host.@names) {
 				host.setProperty(name, host.col(host.@names.indexOf(name)))
+//                this.metaClass.setProperty(name, column)
 				column = host[name]
 			}
 		}
-		return column[row]
+        
+        if(column instanceof MatrixColumn)
+    		return ((MatrixColumn)column).getDoubleAt(row)
+        else
+            return ((List)column).getAt(row)        
+    }
+    
+	def propertyMissing(String name) {
+        return resolve(name)
 	}
 }
