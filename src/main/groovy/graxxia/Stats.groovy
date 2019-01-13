@@ -171,21 +171,27 @@ class Stats extends DescriptiveStatistics implements Serializable {
      * @param values
      * @return
      */
+    @CompileStatic
     static Stats read(InputStream values = System.in, Closure c=null) {
         Stats s = new Stats()
+        (Stats)readTo(s, values, c)
+    }
+    
+    @CompileStatic
+    static def readTo(DescriptiveStatistics s, InputStream values = System.in, Closure c=null) {
         values.eachLine { line ->
-              def value = Double.parseDouble(line.trim())
+              double value = Double.parseDouble(line.trim())
               if(c == null) {
                   s.addValue(value)
               }
               else {
-                  value = c(value)
-                  if(value != false)
-                      s.addValue(value)
+                  Object newValue = c(value)
+                  if(newValue != false)
+                      s.addValue((double)newValue)
               }
         }
         return s
-    }
+    } 
     
     @CompileStatic
     static mean() {
