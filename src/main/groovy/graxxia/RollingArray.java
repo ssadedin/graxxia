@@ -49,7 +49,7 @@ public class RollingArray {
     public void setAt(int position, double value) {
         if(position<0 || position>maxPosition)
             throw new IndexOutOfBoundsException(String.format("Index %d is outside the bounds of window of size %d", position, windowSize));
-        values[(offset + position) % windowSize] = (short) value;
+        values[(offset + position) % windowSize] = value;
     }
     
     public double getAt(int position) {
@@ -57,4 +57,19 @@ public class RollingArray {
             throw new IndexOutOfBoundsException(String.format("Index %d is outside the bounds of window of size %d", position, windowSize));
         return values[(offset + position) % windowSize];
     }
+    
+    public String dump() {
+        StringBuilder result = new StringBuilder();
+        
+        for(int i=0; i<windowSize; ++i) {
+            result.append(String.format("%9d",i+1));
+        } 
+        result.append("\n   ");
+        for(int i=0; i<windowSize; ++i) {
+            if(i>0)
+                result.append(",  ");
+            result.append(String.format("%.4f",getAt(i)));
+        }
+        return result.toString();
+    } 
 }

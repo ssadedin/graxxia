@@ -26,5 +26,29 @@ class RollingStatsTest {
         assert abs(s.mean - rs.mean) < 0.001
         assert abs(s.standardDeviation - rs.standardDeviation) < 0.001
     }
+    
+    @Test
+    public void testNegativeVarianceCase() {
+        
+        List values = [
+            0.455,
+            0.455,
+            0.455,
+            0.455,
+        ]
+        
+            
+        // note that this causes the rs object below to assert it has the right variance with every addition
+        RollingStats.debug = true
+        RollingStats rs = new RollingStats(4)
+        
+        for(double val in values) {
+            println "Add $val to " + rs.values.values
+            println rs.values.dump()
+            
+            rs.addValue(val)
+        }
+        
+    }
 
 }
