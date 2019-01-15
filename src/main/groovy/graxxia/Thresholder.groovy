@@ -24,6 +24,10 @@ class ThresholdRange {
     }
 }
 
+interface ThresholdCondition {
+    Object include(double value, Object additional)
+}
+
 /**
  * Finds runs of values in a stream of numbers that satisfy a condition, specified as a Closure
  * <p>
@@ -43,6 +47,8 @@ class Thresholder {
     
     Closure<Object> condition
     
+    ThresholdCondition conditionInterface
+    
     private List<ThresholdRange> ranges = []
     
     int start = 0
@@ -57,6 +63,11 @@ class Thresholder {
     
     Thresholder threshold(@ClosureParams(value=SimpleType,options='double') Closure<Object> c) {
         this.condition = c
+        return this
+    }
+    
+    Thresholder threshold(ThresholdCondition c) {
+        this.conditionInterface = c
         return this
     }
     
@@ -76,11 +87,19 @@ class Thresholder {
     
     void update(double value) {
         
-        if(twoArg.is(null)) {
-            twoArg = this.condition.maximumNumberOfParameters == 2
-        }
+        def result
         
-        def result = twoArg ? condition(value, activeValue) : condition(value)
+        if(this.conditionInterface != null) {
+            result = this.conditionInterface.include(value, activeValue)
+        }
+        else {
+            
+            if(twoArg.is(null)) {
+                twoArg = this.condition.maximumNumberOfParameters == 2
+            }
+            
+            result = twoArg ? condition(value, activeValue) : condition(value)
+        }
         
         if((!result.is(null) && (result != false))) { 
             if(state == ThresholdState.INACTIVE) {
