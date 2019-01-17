@@ -11,16 +11,34 @@ enum ThresholdState {
 }
 
 @CompileStatic
-class ThresholdRange {
-    IntRange range
+class ThresholdRange extends IntRange {
+    
+    public ThresholdRange(int from, int to, Object value, Stats stats, int maxIndex, int minIndex) {
+        super(from, to);
+        this.value = value;
+        this.stats = stats;
+        this.maxIndex = maxIndex;
+        this.minIndex = minIndex;
+    }
     Object value
     Stats stats
     
+    /**
+     * The position of the maximum value during this range's activation
+     */
+    int maxIndex
+    
+    /**
+     * The position of the minimum value during this range's activation
+     */
+    int minIndex
+    
+    @Override
     String toString() {
         if(value.is(null))
-            range?.toString()
+            "${from}..${to}"
         else
-            range?.toString() + "[$value]"
+            "${from}..${to}($value)"
     }
 }
 
@@ -41,11 +59,13 @@ interface ThresholdCondition {
  * @author Simon Sadedin
  */
 @CompileStatic
-class Thresholder {
+class Thresholder extends Expando {
     
     ThresholdState state = ThresholdState.INACTIVE
     
     Closure<Object> condition
+    
+    Closure<ThresholdRange> emit
     
     ThresholdCondition conditionInterface
     
@@ -57,6 +77,11 @@ class Thresholder {
     
     Object activeValue
     
+    /*
+     * Running values updated within active regions
+     */
+    int maxIndex
+    int minIndex
     Stats stats = null
     
     Boolean twoArg = null
@@ -68,6 +93,11 @@ class Thresholder {
     
     Thresholder threshold(ThresholdCondition c) {
         this.conditionInterface = c
+        return this
+    }
+    
+    Thresholder andThen(Closure<ThresholdRange> c) {
+        this.emit = c
         return this
     }
     
@@ -106,9 +136,16 @@ class Thresholder {
                 start = index
                 state = ThresholdState.ACTIVE
                 stats = new Stats()
+                minIndex = index
+                maxIndex = index
             }
             if(result != true)
                 activeValue = result
+            if(value > stats.max)
+                maxIndex = index
+            if(value < stats.min)
+                minIndex = index
+                
             stats << value
         }
         else
@@ -119,9 +156,13 @@ class Thresholder {
     }
     
     void endRange() {
-        ranges.add(new ThresholdRange(range:start..index, value: activeValue, stats: stats))
+        ThresholdRange newRange = new ThresholdRange(start,index, activeValue, stats, maxIndex, minIndex)
+        ranges.add(newRange)
         state = ThresholdState.INACTIVE
         start = -1
+        if(this.emit != null) {
+            this.emit.call(newRange)
+        }
     }
     
     List<ThresholdRange> getRanges() {
