@@ -68,6 +68,10 @@ class RollingStats {
             assert variance >= 0 : "Variance update produced negative value: old mean $oldMean, new mean $newMean, length = $length"
         }
         
+        // This seems to occur sporadically due to numerical issues when mean / sd is very close to zero
+        if(this.variance<0)
+            this.variance = 0.0d
+        
         this.mean = newMean
         this.values.add(x)
     }
