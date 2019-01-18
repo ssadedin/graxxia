@@ -48,4 +48,21 @@ class ThresholderTest {
         assert ranges[1].maxIndex == 11
         assert ranges[1].minIndex == 12
     }
+    
+    @Test
+    void 'test updating noncontiguous ranges works'() {
+        Thresholder t = new Thresholder().threshold {
+            it > 5
+        }
+        
+        t << [1,1,1,2,2,6,7,9]
+            //0 1 2 3 4 5 6 7 8 9 0 1 2 
+         
+        t.update(20,30)
+        t.update(21,32)
+        t.update(22,2)
+        
+        // expect 2 ranges because the index was discontiguous b/w 7 and 20
+        assert t.ranges.size() == 2
+    }
 }

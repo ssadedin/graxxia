@@ -3,7 +3,8 @@ package graxxia
 import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics
+
+
 
 @CompileStatic
 enum ThresholdState {
@@ -115,6 +116,13 @@ class Thresholder extends Expando {
         }
     }
     
+    void update(final int index, final double value) {
+        if(index != this.index)
+            checkEnd()
+        this.index = index    
+        update(value)
+    }
+    
     void update(double value) {
         
         def result
@@ -149,10 +157,16 @@ class Thresholder extends Expando {
             stats << value
         }
         else
-        if((result == false) && (state == ThresholdState.ACTIVE)) {
-            endRange()
+        if(result == false) { 
+            checkEnd()
         }
         ++index
+    }
+
+    private void checkEnd() {
+        if(state == ThresholdState.ACTIVE) {
+            endRange()
+        }
     }
     
     void endRange() {
