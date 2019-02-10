@@ -24,6 +24,7 @@ import groovy.transform.CompileStatic;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition
 import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
 
 /**
@@ -773,40 +774,49 @@ class Matrix extends Expando implements Iterable, Serializable {
     /**
      * Shorthand to give a familiar function to R users
      */
-    List<Long> which(Closure c) {
+    @CompileStatic
+    List<Number> which(Closure c) {
         this.findIndexValues(c)
     }
     
+    @CompileStatic
     Matrix multiply(double d) {
-        new Matrix(this.matrix.scalarMultiply(d))
+        new Matrix((Array2DRowRealMatrix)this.matrix.scalarMultiply(d))
     }
     
+    @CompileStatic
     Matrix multiply(Matrix m) {
-        new Matrix(this.matrix.preMultiply(m.dataRef))
+        new Matrix((Array2DRowRealMatrix)this.matrix.preMultiply(m.matrix))
     }
     
+    @CompileStatic
     Matrix plus(Matrix m) {
         new Matrix(this.matrix.add(m.matrix))
     }
       
+    @CompileStatic
     Matrix minus(Matrix m) {
         new Matrix(this.matrix.subtract(m.matrix))
     }
     
-     Matrix divide(double d) {
-        new Matrix(this.matrix.scalarMultiply(1/d))
+    @CompileStatic
+    Matrix divide(double d) {
+        new Matrix((Array2DRowRealMatrix)this.matrix.scalarMultiply(1/d))
     }
     
+    @CompileStatic
     Matrix plus(double x) {
-        new Matrix(this.matrix.scalarAdd(x))
+        new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(x))
     }
     
+    @CompileStatic
     Matrix minus(double x) {
-        new Matrix(this.matrix.scalarMinus(x))
+        new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(-x))
     }
     
+    @CompileStatic
     Matrix transpose() {
-        new Matrix(this.matrix.transpose())
+        new Matrix((Array2DRowRealMatrix)this.matrix.transpose())
     }
     
     Matrix div(Matrix m) {
@@ -891,13 +901,16 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         
         eachRow { row ->
-            IterationDelegate d = (IterationDelegate)delegate
-            if(nonMatrixCols) {
+            IterationDelegate d
+            if(!delegate.is(null) && (delegate instanceof IterationDelegate))
+                d = (IterationDelegate)delegate
+                
+             if(nonMatrixCols) {
                 nonMatrixCols.eachWithIndex { colNameValue, colIndexValue -> 
                     String colName = (String)colNameValue
                     int colIndex = colIndexValue
                     MatrixValueAdapter adapter = types[colIndex]
-                    Object value = d.propertyMissing(colName)
+                    Object value = d.propertyMissing(colName) 
                     w.print(adapter.serialize(value) + "\t") 
                 }
             }
@@ -1169,18 +1182,20 @@ class Matrix extends Expando implements Iterable, Serializable {
         return m
     }
     
+    @CompileStatic
     Matrix iterateWithDelegate(String methodName, Closure c) {
         iterateWithDelegate(org.codehaus.groovy.runtime.DefaultGroovyMethods.getDeclaredMethod(methodName, Iterator,  Closure), c) 
     }
     
+    @CompileStatic
     Matrix iterateWithDelegate(Method m, Closure c) {
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate dg = new IterationDelegate(this)
         c = (Closure)c.clone()
-        c.setDelegate(delegate)
+        c.setDelegate(dg)
         int rowIndex = 0;
         Iterator i = this.iterator()
         def result = m.invoke(null, i, { values ->
-            delegate.row = rowIndex++
+            dg.row = rowIndex++
             c(values)
         })
         
@@ -1194,7 +1209,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }        
         else
         if(result instanceof double[]) {
-            matrixResult = new Matrix([result])
+            matrixResult = new Matrix((Iterable<Iterable>)[result])
         }
         else
         if(result instanceof Iterable) {
@@ -1299,19 +1314,23 @@ class Matrix extends Expando implements Iterable, Serializable {
         } + this.columns.collectEntries { MatrixColumn c -> [c.name, c[i] ] }
     }
     
+    @CompileStatic
     Iterator<Map> listMapIterator() {
         new Iterator() {
             
             int i = -1;
             
+            @CompileStatic
             boolean hasNext() {
                 i < matrix.rowDimension-1
             }
             
+            @CompileStatic
             Map next() {
                 rowAsMap(++i)
             }
             
+            @CompileStatic
             void remove() {
                 throw new UnsupportedOperationException() 
             }
@@ -1334,12 +1353,22 @@ class Matrix extends Expando implements Iterable, Serializable {
      * @return  an object implmementing a List interface that reflects the contents of
      *          this Matrix as rows and named columns.
      */
+    @CompileStatic
     List<Map> asListMap() {
         return [
-            get : { i -> rowAsMap(i) },
+            get : { int i -> rowAsMap(i) },
             size : { matrix.rowDimension },
             isEmpty : { matrix.rowDimension == 0 },
             iterator : { listMapIterator() }
         ] as List
+    }
+    
+    @CompileStatic
+    List<Map> toListMap() {
+        asListMap()
+    }
+    
+    SingularValueDecomposition svd() {
+       new SingularValueDecomposition(this.matrix)
     }
 }

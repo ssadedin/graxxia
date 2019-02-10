@@ -123,6 +123,7 @@ class TSV implements Iterable {
         
         Iterator i = newIterator()
         
+        // List or Map
         def customColumnTypes = options.columnTypes
         
         List columnTypes = null
@@ -130,42 +131,49 @@ class TSV implements Iterable {
             columnTypes = customColumnTypes
         
         new Iterator() {
+            @CompileStatic
             boolean hasNext() {
                 i.hasNext()
             }
             
+            @CompileStatic
             Object next() {
-                def line = i.next()
+                PropertyMapper line = i.next()
                 
                 if(!columnTypes) {
-                    columnTypes = [String] * line.values.size()
-                    
-                    line.values.eachWithIndex  { v, index ->
-                        if(customColumnTypes instanceof Map && customColumnTypes.containsKey(index))
-                            columnTypes[index] = customColumnTypes[index]
+                    columnTypes = inferColumnTypes(line)
+                }
+                
+                line.values = TSV.this.convertColumns((String[])line.values, columnTypes)
+                
+                return line
+            }
+
+            private List inferColumnTypes(PropertyMapper line) {
+                columnTypes = [String] * (int)((List)line.values).size()
+
+                line.values.eachWithIndex  { Object v, int index ->
+                    if(customColumnTypes instanceof Map && customColumnTypes.containsKey(index))
+                        columnTypes[index] = customColumnTypes[index]
+                    else {
+                        if(v.isInteger())
+                            columnTypes[index] = Integer
+                        else
+                        if(v.isDouble())
+                            columnTypes[index] = Double
+                        else
+                        if(v in ["true","false"])
+                            columnTypes[index] = Boolean
                         else {
-                            if(v.isInteger())
-                                columnTypes[index] = Integer
-                            else
-                            if(v.isDouble())
-                                columnTypes[index] = Double
-                            else
-                            if(v in ["true","false"])
-                                columnTypes[index] = Boolean
-                            else {
-                                for(f in formats) {
-                                    if(f.sniff(v)) {
-                                        columnTypes[index] = f
-                                    }
+                            for(f in formats) {
+                                if(f.sniff(v)) {
+                                    columnTypes[index] = f
                                 }
                             }
                         }
                     }
                 }
-                
-                line.values = TSV.this.convertColumns(line.values, columnTypes)
-                
-                return line
+                return columnTypes
             }
             
             void remove() {
