@@ -1201,7 +1201,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         Matrix matrixResult
         if(result instanceof Matrix) {
-            matrixResult = result
+            matrixResult = (Matrix)result
         }
         else 
         if(result instanceof double[][]) {
