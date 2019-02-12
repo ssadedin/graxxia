@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.Arrays;
 
 import org.apache.commons.math3.exception.MathIllegalArgumentException;
@@ -45,6 +46,9 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
     int total = 0;
     
     static class SerializableStorelessUnivariateStatistic implements StorelessUnivariateStatistic, Serializable {
+        
+            private static final long serialVersionUID = 1L;
+
             @Override
             public double evaluate(double[] values, int begin, int length) throws MathIllegalArgumentException {
                 return 0;
@@ -110,9 +114,9 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
         }
     }
      
-    public IntegerStats(int maxPercentileValue, Iterable covValues) {
+    public IntegerStats(int maxPercentileValue, Iterable sourceValues) {
         values = new int[maxPercentileValue];
-        for(Object obj : covValues) {
+        for(Object obj : sourceValues) {
             this.leftShift(obj);
         }
     }
@@ -204,7 +208,6 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
      * @param   threshold
      * @return  the fraction of values above given threshold
      */
-    @CompileStatic
     public double fractionAbove(int threshold) {
         final int numValues = values.length;
         int above = 0;
@@ -218,22 +221,26 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
      * @param coverageDepth
      * @return  the percentage of values above given threshold
      */
-    @CompileStatic
     public double percentageAbove(int coverageDepth) {
         return 100d*fractionAbove(coverageDepth);
     }
     
-    @CompileStatic
     public int getMedian() {
         return getPercentile(50);
     }
     
-    @CompileStatic
     public int getAt(int percentile) {
         return getPercentile(percentile);
     }
     
     public String toString() {
         return super.toString() + "Median: " + getMedian() + "\n";
+    }
+    
+    void save(Writer w) throws IOException {
+        for(int i=0; i<values.length; ++i) {
+            w.write(i + "\t" + values[i] + "\t" + (1 - fractionAbove(i)));
+            w.write('\n');
+        }
     }
 }

@@ -49,4 +49,17 @@ class IntegerStatsTest {
         values.each { c.addValue(it); d.addValue(it) }
         assert c.getPercentile(50) == 30
     }
+    
+    @Test
+    void testSave() {
+        def values = [30]*10 + [20]*5 + [5] * 10
+        def c = new IntegerStats(100)
+        values.each { c.addValue(it) }
+        
+        StringWriter sw = new StringWriter()
+        c.save(sw)
+        
+        println "Output:\n" + sw.toString()
+        println "*" * 40
+    } 
 }
