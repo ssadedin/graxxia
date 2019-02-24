@@ -50,5 +50,21 @@ class RollingStatsTest {
         }
         
     }
+    
+    @Test
+    void 'test single value mean'() {
+        RollingStats rs = new RollingStats(20)
+        rs << 5
+        
+        assert abs(rs.stableMean - 5d) < 0.01
+    }
 
+    @Test
+    void 'test clipped mean'() {
+        RollingStats rs = new RollingStats(20)
+        rs << 5
+        rs << 10
+        
+        assert abs(rs.stableMean - 7.5d) < 0.01
+    }
 }

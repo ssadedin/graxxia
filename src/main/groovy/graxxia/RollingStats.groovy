@@ -36,8 +36,11 @@ class RollingStats {
      */
     DescriptiveStatistics desc 
     
+    DescriptiveStatistics warmupStats
+    
     RollingStats(int length) {
         this.values = new RollingArray(length)
+        this.warmupStats = new DescriptiveStatistics(length)
         this.length = length;
         if(debug) {
             initDebug()
@@ -52,9 +55,15 @@ class RollingStats {
     
     double variance = 0.0d
     double mean = 0.0d
+    
     int n = 0
     
     void addValue(double x) {
+        
+        ++this.n
+        if(n<length)
+            warmupStats.addValue(x)
+           
         double oldValue = this.values.getAt(0)
         double oldMean = this.mean
         double newMean = oldMean + (x - oldValue) / this.length 
@@ -74,6 +83,13 @@ class RollingStats {
         
         this.mean = newMean
         this.values.add(x)
+    }
+    
+    double getStableMean() {
+        if(n<length)
+            return warmupStats.mean
+        else
+            return mean
     }
     
     void leftShift(double x) {
