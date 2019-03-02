@@ -316,4 +316,10 @@ public class FastNormal extends AbstractRealDistribution {
     public double sample()  {
         return standardDeviation * random.nextGaussian() + mean;
     }
+
+    @Override
+    public String toString() {
+        return "FastNormal [mean=" + mean + ", standardDeviation=" + standardDeviation + "]";
+    }
+    
 }
