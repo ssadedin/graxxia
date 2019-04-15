@@ -988,7 +988,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
             
         
-        int columnWidth = Math.max(10, headerCells ? headerCells*.size().max() : 0)
+        int columnWidth = Math.max(10, headerCells ? headerCells*.size()?.max()?:0 : 0)
         int rowNumWidth = 6
         
         String headers = headerCells ? (" " * rowNumWidth) + headerCells*.padRight(columnWidth).join(" ") + "\n" : ""
