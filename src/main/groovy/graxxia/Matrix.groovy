@@ -275,6 +275,8 @@ class Matrix extends Expando implements Iterable, Serializable {
             int nonNumericColumnIndex = 0
             double[] rowNumericValues = new double[matrixColumnCount]
             def rowValues = row instanceof PropertyMapper ? row.getValues() : row
+            if(rowValues instanceof MatrixColumn)
+                rowValues = rowValues.iterator()
             for(value in rowValues) {  
                 if(colIndex >= columnCount) // ragged array!?
                     break
