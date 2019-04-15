@@ -219,6 +219,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         initFromIterator(rowIterator,r0,columnNames)
     }
     
+    @CompileStatic
     public initFromIterator(Iterator<Iterable> rows, def r0, List<String> columnNames=null) {
         
         // new File("/Users/simon/test.txt").text = (new Date()).toString() + " : graxxia test"
@@ -226,6 +227,24 @@ class Matrix extends Expando implements Iterable, Serializable {
         List data = new ArrayList(4096)
         int rowCount = 0
         List<Boolean> isNumerics
+        if(r0 instanceof float[]) {
+            boolean [] nums = new boolean[((float[])r0).size()]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        else 
+        if(r0 instanceof int[]) {
+            boolean [] nums = new boolean[((int[])r0).size()]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        else 
+        if(r0 instanceof double[]) {
+            boolean [] nums = new boolean[((double[])r0).size()]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        else
         if(r0 instanceof Iterable) {
             isNumerics = r0.collect { it instanceof Number }
         }
@@ -234,14 +253,18 @@ class Matrix extends Expando implements Iterable, Serializable {
             isNumerics = r0.values.collect { it instanceof Number }
         }
         else {
-            isNumerics = [true] * r0.size()
+            boolean [] nums = new boolean[getRowSize(r0)]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
         }
         
-        int matrixColumnCount = isNumerics.count { it }
+        int matrixColumnCount = (int)isNumerics.count { it }
         
         // Initialise an empty list for each non-numeric column that
         // we are going to fill
         List<List> nonNumerics = isNumerics.grep { !it }.collect { [] }
+        
+        final int columnCount = isNumerics.size()
         
         int rowIndex = 0
         def row = r0
@@ -251,8 +274,10 @@ class Matrix extends Expando implements Iterable, Serializable {
             int numericColumnIndex = 0
             int nonNumericColumnIndex = 0
             double[] rowNumericValues = new double[matrixColumnCount]
-            def rowValues = row instanceof PropertyMapper ? row.values : row
+            def rowValues = row instanceof PropertyMapper ? row.getValues() : row
             for(value in rowValues) {  
+                if(colIndex >= columnCount) // ragged array!?
+                    break
                 if(isNumerics[colIndex]) {
                     rowNumericValues[numericColumnIndex++] = (double)value
                 }
@@ -271,13 +296,17 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         matrix = new Array2DRowRealMatrix((double[][])data.toArray(), false)
         if(columnNames)
-            this.@names = [columnNames,isNumerics].transpose().grep { it[1] }.collect { it[0] }
+            this.@names = [columnNames,isNumerics].transpose().grep { List i -> i[1] }.collect { Object i -> ((List)i)[0] }
             
         int nonNumericIndex = 0
         isNumerics.eachWithIndex { isNumeric, index ->
             if(!isNumeric)
                 this.setProperty(columnNames[index],nonNumerics[nonNumericIndex++])        
         }
+    }
+    
+    int getRowSize(def row) {
+        row.size()
     }
     
     public Matrix(double [][] values) {
