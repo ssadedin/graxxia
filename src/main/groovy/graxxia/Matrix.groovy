@@ -979,9 +979,11 @@ class Matrix extends Expando implements Iterable, Serializable {
        
     String toString() {
         
+        List<Map.Entry<String,Iterable>> userColumns = this.properties.grep { it.value instanceof Iterable }
+        
         def headerCells = this.@names
         if(this.properties) {
-            headerCells = this.properties.collect { it.key } + headerCells
+            headerCells = userColumns*.key + headerCells
         }
         
         int halfMaxCols = Math.floor(displayColumns/2)
@@ -1009,11 +1011,11 @@ class Matrix extends Expando implements Iterable, Serializable {
            else 
                cells = (row as List)
            if(this.properties) {
-               cells = this.properties.collect { it.value?it.value[rowCount]:"null" } + cells
+               cells = userColumns.collect { it.value?it.value[rowCount]:"null" } + cells
            }
            
            if(cells.size()>displayColumns) {
-               cells = cells[0..halfMaxCols] + ['...'] + cells[(cells.size()-halfMaxCols)..<headerCells.size()]
+               cells = cells[0..halfMaxCols] + ['...'] + cells[(cells.size()-halfMaxCols)..<cells.size()]
            }
            
            List values = cells.collect { value ->
