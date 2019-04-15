@@ -941,6 +941,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         Matrix m = new Matrix(values, names)
         return m
     }
+    
+    int displayPrecision = 6
+    
+    int displayColumns = 50
        
     String toString() {
         
@@ -949,6 +953,12 @@ class Matrix extends Expando implements Iterable, Serializable {
             headerCells = this.properties.collect { it.key } + headerCells
         }
         
+        int halfMaxCols = Math.floor(displayColumns/2)
+        if(headerCells.size() > displayColumns) {
+           headerCells = headerCells[0..halfMaxCols] + ['...'] + headerCells[(headerCells.size()-halfMaxCols)..<headerCells.size()]
+        }
+            
+        
         int columnWidth = Math.max(10, headerCells ? headerCells*.size().max() : 0)
         int rowNumWidth = 6
         
@@ -956,7 +966,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         DecimalFormat format = new DecimalFormat()
         format.minimumFractionDigits = 0
-        format.maximumFractionDigits = 6
+        format.maximumFractionDigits = displayPrecision
         
        
         int rowCount = 0
@@ -970,7 +980,12 @@ class Matrix extends Expando implements Iterable, Serializable {
            if(this.properties) {
                cells = this.properties.collect { it.value?it.value[rowCount]:"null" } + cells
            }
-           def values = cells.collect { value ->
+           
+           if(cells.size()>displayColumns) {
+               cells = cells[0..halfMaxCols] + ['...'] + cells[(cells.size()-halfMaxCols)..<headerCells.size()]
+           }
+           
+           List values = cells.collect { value ->
                if(!(value instanceof Double))
                    return String.valueOf(value).padRight(columnWidth)
                        
