@@ -629,4 +629,14 @@ class MatrixTest {
         assert m.countBy { type } == [ "animal" : 3, "plant" : 2]
         
     }
+    
+    @Test
+    void displayWide() {
+        Matrix m = new Matrix([
+            1..100,
+            200..300
+        ])
+        
+        println m.toString()
+    }
 }
