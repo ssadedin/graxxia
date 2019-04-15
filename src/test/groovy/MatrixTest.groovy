@@ -639,4 +639,19 @@ class MatrixTest {
         
         println m.toString()
     }
+    
+    @Test
+    void subsetColumns() {
+        Matrix m = new Matrix([
+            1..100,
+            201..300
+        ])
+        
+       Matrix small = m[][1..5]
+       
+       assert small.columnDimension == 5
+       assert small.rowDimension == 2
+       
+       println small
+    }
 }
