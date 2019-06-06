@@ -43,8 +43,8 @@ class ThresholdRange extends IntRange {
     }
 }
 
-interface ThresholdCondition {
-    Object include(double value, Object additional)
+interface ThresholdCondition<T> {
+    Object include(final T value, final Object additional)
 }
 
 /**
@@ -60,7 +60,7 @@ interface ThresholdCondition {
  * @author Simon Sadedin
  */
 @CompileStatic
-class Thresholder extends Expando {
+class Thresholder<T> extends Expando {
     
     ThresholdState state = ThresholdState.INACTIVE
     
@@ -68,7 +68,11 @@ class Thresholder extends Expando {
     
     Closure<ThresholdRange> emit
     
-    ThresholdCondition conditionInterface
+    Closure updater
+    
+    Closure<ThresholdRange> init
+    
+    ThresholdCondition<T> conditionInterface
     
     private List<ThresholdRange> ranges = []
     
@@ -92,16 +96,27 @@ class Thresholder extends Expando {
         return this
     }
     
-    Thresholder threshold(ThresholdCondition c) {
+    Thresholder threshold(ThresholdCondition<T> c) {
         this.conditionInterface = c
         return this
     }
     
+    
+    Thresholder initWith(@ClosureParams(value=SimpleType, options=['double','Object']) Closure c) {
+        this.init = c
+        return this
+    }
+    
+    Thresholder updateWith(Closure c) {
+        this.updater = c
+        return this
+    }
+     
     Thresholder andThen(Closure<ThresholdRange> c) {
         this.emit = c
         return this
     }
-    
+   
     void leftShift(List<Double> values) {
         update(values)
     }
@@ -116,14 +131,14 @@ class Thresholder extends Expando {
         }
     }
     
-    void update(final int index, final double value) {
+    void update(final int index, final T value) {
         if(index != this.index)
             checkEnd()
         this.index = index    
         update(value)
     }
     
-    void update(double value) {
+    void update(final T value) {
         
         def result
         
@@ -146,15 +161,27 @@ class Thresholder extends Expando {
                 stats = new Stats()
                 minIndex = index
                 maxIndex = index
+                if(!init.is(null)) {
+                    this.activeValue = init(value, activeValue)
+                }
             }
+            
             if(result != true)
                 activeValue = result
-            if(value > stats.max)
-                maxIndex = index
-            if(value < stats.min)
-                minIndex = index
                 
-            stats << value
+            if(!this.updater.is(null)) {
+                this.updater.call(this.activeValue, value)
+            }
+                
+            if(value instanceof Number) {
+                Number numericValue = (Number) value
+                if(numericValue > stats.max)
+                    maxIndex = index
+                if(numericValue < stats.min)
+                    minIndex = index
+                stats << value
+            }
+                
         }
         else
         if(result == false) { 
@@ -177,6 +204,7 @@ class Thresholder extends Expando {
         if(this.emit != null) {
             this.emit.call(newRange)
         }
+        this.activeValue = null
     }
     
     List<ThresholdRange> getRanges() {
