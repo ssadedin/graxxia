@@ -112,18 +112,18 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     @CompileStatic
-    private void initFromColumns(MatrixColumn[] sourceColumns) {
-        MatrixColumn c0 = sourceColumns[0]
-        int rows = c0.size()
+    private void initFromColumns(final MatrixColumn[] sourceColumns) {
+        final MatrixColumn c0 = sourceColumns[0]
+        final int rows = c0.size()
         final int cols = sourceColumns.size()
-        double[][] newData =  new double[rows][]
-        MatrixColumn [] columns = sourceColumns
+        final double[][] newData =  new double[rows][cols]
+        final MatrixColumn [] columns = sourceColumns
         for(int i=0; i<rows;++i) {
             double [] row = newData[i]
             for(int j=0; j<cols;++j)
                 row[j] = (double)(columns[j].getDoubleAt(i))
         }
-        matrix = new Array2DRowRealMatrix(newData,false)
+        this.matrix = new Array2DRowRealMatrix(newData,false)
         this.names = columns.collect { MatrixColumn c -> c.name }
     }
     
@@ -215,48 +215,22 @@ class Matrix extends Expando implements Iterable, Serializable {
         Iterator rowIterator = rows.iterator()
         if(!rowIterator.hasNext())
             this.matrix = new Array2DRowRealMatrix([[]] as double[][], false)
+            
         def r0 = rowIterator.next()
-        initFromIterator(rowIterator,r0,columnNames)
+        if(r0 instanceof MatrixColumn) {
+            this.initFromColumns(rows as MatrixColumn[])
+        }
+        else {
+            initFromIterator(rowIterator,r0,columnNames)
+        }
     }
     
     @CompileStatic
     public initFromIterator(Iterator<Iterable> rows, def r0, List<String> columnNames=null) {
         
-        // new File("/Users/simon/test.txt").text = (new Date()).toString() + " : graxxia test"
-        
         List data = new ArrayList(4096)
         int rowCount = 0
-        List<Boolean> isNumerics
-        if(r0 instanceof float[]) {
-            boolean [] nums = new boolean[((float[])r0).size()]
-            Arrays.fill(nums,true)
-            isNumerics = nums as List
-        }
-        else 
-        if(r0 instanceof int[]) {
-            boolean [] nums = new boolean[((int[])r0).size()]
-            Arrays.fill(nums,true)
-            isNumerics = nums as List
-        }
-        else 
-        if(r0 instanceof double[]) {
-            boolean [] nums = new boolean[((double[])r0).size()]
-            Arrays.fill(nums,true)
-            isNumerics = nums as List
-        }
-        else
-        if(r0 instanceof Iterable) {
-            isNumerics = r0.collect { it instanceof Number }
-        }
-        else
-        if(r0 instanceof PropertyMapper) {
-            isNumerics = r0.values.collect { it instanceof Number }
-        }
-        else {
-            boolean [] nums = new boolean[getRowSize(r0)]
-            Arrays.fill(nums,true)
-            isNumerics = nums as List
-        }
+        List<Boolean> isNumerics = sniffNumericColumns(r0)
         
         int matrixColumnCount = (int)isNumerics.count { it }
         
@@ -305,6 +279,49 @@ class Matrix extends Expando implements Iterable, Serializable {
             if(!isNumeric)
                 this.setProperty(columnNames[index],nonNumerics[nonNumericIndex++])        
         }
+    }
+
+    /**
+     * Probes the given row to see which columns in the row appear to be 
+     * numeric types.
+     * 
+     * @param r0
+     * @return  a list of booleans, true for numeric columns, false for non-numeric
+     */
+    @CompileStatic
+    private List<Boolean> sniffNumericColumns(Object r0) {
+        List<Boolean> isNumerics
+        if(r0 instanceof float[]) {
+            boolean [] nums = new boolean[((float[])r0).size()]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        else
+        if(r0 instanceof int[]) {
+            boolean [] nums = new boolean[((int[])r0).size()]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        else
+        if(r0 instanceof double[]) {
+            boolean [] nums = new boolean[((double[])r0).size()]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        else
+        if(r0 instanceof Iterable) {
+            isNumerics = r0.collect { it instanceof Number }
+        }
+        else
+        if(r0 instanceof PropertyMapper) {
+            isNumerics = r0.values.collect { it instanceof Number }
+        }
+        else {
+            boolean [] nums = new boolean[getRowSize(r0)]
+            Arrays.fill(nums,true)
+            isNumerics = nums as List
+        }
+        return isNumerics
     }
     
     int getRowSize(def row) {

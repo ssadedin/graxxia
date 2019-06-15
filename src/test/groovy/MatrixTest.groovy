@@ -654,4 +654,46 @@ class MatrixTest {
        
        println small
     }
+    
+    @Test
+    void initFromColumnArray() {
+        Matrix foo = new Matrix(
+            [
+                [1,2,3,4],
+                [5,6,7,8]
+            ]
+        )
+        
+        foo.@names = ['tim','fred','bob','paul']
+        
+        // Pass as array
+        Matrix subset = new Matrix(foo.getColumns(['tim','paul']) as MatrixColumn[])
+        println subset
+        
+        assert subset.@names == ['tim','paul']
+        assert subset.getColumnDimension() == 2
+        assert subset.getRowDimension() == 2
+        assert subset[1][1] == 8.0d
+    }
+    
+    @Test
+    void initFromColumnIterable() {
+        Matrix foo = new Matrix(
+            [
+                [1,2,3,4],
+                [5,6,7,8]
+            ]
+        )
+        
+        foo.@names = ['tim','fred','bob','paul']
+        
+        // Pass as array
+        Matrix subset = new Matrix(foo.getColumns(['tim','paul']))
+        println subset
+        
+        assert subset.@names == ['tim','paul']
+        assert subset.getColumnDimension() == 2
+        assert subset.getRowDimension() == 2
+        assert subset[1][1] == 8.0d
+    }    
 }
