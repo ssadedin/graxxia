@@ -637,6 +637,8 @@ class MatrixTest {
             200..300
         ])
         
+        m.@displayColumns = 10
+        
         println m.toString()
     }
     
