@@ -237,6 +237,8 @@ class Matrix extends Expando implements Iterable, Serializable {
         // Initialise an empty list for each non-numeric column that
         // we are going to fill
         List<List> nonNumerics = isNumerics.grep { !it }.collect { [] }
+        if(!nonNumerics.isEmpty() && columnNames == null)
+            throw new IllegalArgumentException("Column names must be provided as second argument when non-numeric columns are used")
         
         final int columnCount = isNumerics.size()
         

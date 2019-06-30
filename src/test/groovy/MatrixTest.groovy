@@ -698,4 +698,23 @@ class MatrixTest {
         assert subset.getRowDimension() == 2
         assert subset[1][1] == 8.0d
     }    
+    
+    @Test
+    void initFromMixedRows() {
+        
+        List data = [
+            ['chr1', 979993, 0, 114, 113],
+            ['chr1', 979994, 0, 114, 113],
+            ['chr1', 979995, 0, 113, 112],
+            ['chr1', 979996, 0, 101, 100],
+            ['chr1', 979997, 0, 99, 98],
+            ['chr1', 979998, 0, 97, 96],
+            ['chr1', 979999, 0, 97, 96],
+            ['chr1', 980000, 0, 103, 102]
+        ]
+    
+        Matrix m = new Matrix(data, ['chr', 'pos','coeffv', 'ref', 'eval'])
+        println m
+        
+    }
 }
