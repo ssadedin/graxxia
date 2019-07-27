@@ -1007,6 +1007,34 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
+    static Matrix load(Map options = [:], Reader r) {
+        List rows = new ArrayList(1024)
+        
+        
+        boolean rfl = false
+        
+        List names
+        if(options.columnNames) {
+            names = options.columnNames
+            rfl = true
+        }
+        
+        Map tsvOptions = [readFirstLine:rfl]
+        if('columnTypes' in options) {
+            tsvOptions.columnTypes = options.columnTypes
+        }
+        
+        List<PropertyMapper> values = new TSV(tsvOptions, r).collect { it }
+        
+        if(!names && values) {
+            PropertyMapper firstRow = values[0]
+            names = firstRow.columns*.key 
+        }
+        
+        Matrix m = new Matrix(values*.values, names)
+        return m
+    } 
+    
     static Matrix load(Map options = [:], String fileName) {
         List rows = new ArrayList(1024)
         
@@ -1034,7 +1062,13 @@ class Matrix extends Expando implements Iterable, Serializable {
             r.close()
             r = createReader(fileName)
         }
-        List values = new TSV(readFirstLine:rfl, r)*.values
+        
+        Map tsvOptions = [readFirstLine:rfl]
+        if('columnTypes' in options) {
+            tsvOptions.columnTypes = options.columnTypes
+        }
+        
+        List values = new TSV(tsvOptions, r)*.values
         Matrix m = new Matrix(values, names)
         return m
     }

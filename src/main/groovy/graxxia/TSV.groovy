@@ -50,7 +50,7 @@ import java.util.zip.GZIPInputStream
  * 
  * @author Simon
  */
-class TSV implements Iterable {
+class TSV implements Iterable<PropertyMapper> {
 	
 	CsvIterator parser
     
@@ -119,7 +119,7 @@ class TSV implements Iterable {
 		parser = CsvParser.parseCsv(reader, columnNames: columnNames, readFirstLine: true, separator: '\t')
 	}		
     
-    Iterator iterator() {
+    Iterator<PropertyMapper> iterator() {
         
         Iterator i = newIterator()
         

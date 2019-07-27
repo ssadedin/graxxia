@@ -591,7 +591,7 @@ class MatrixTest {
         assert m.bar[1] == 2.0
     }
     
-    @Test 
+//    @Test 
     void testRecycling() {
         def raw = new URL("https://data.cityofnewyork.us/api/views/ebb7-mvp5/rows.csv?accessType=DOWNLOAD").openStream().text
         def csv = { new CSV(new StringReader(raw)) }
@@ -717,4 +717,34 @@ class MatrixTest {
         println m
         
     }
+    
+    @Test
+    void readFromMixed() {
+        Matrix m = Matrix.load('src/test/data/test.cov.tsv', columnNames: ['chr','pos','s1','s2'])
+        println m
+    }
+    
+    @Test
+    void readFromReader() {
+        Matrix m = Matrix.load(new File('src/test/data/test.cov.tsv').newReader(), 
+            columnNames: ['chr','pos','s1','s2'],
+            columnTypes: [0:String]
+            )
+        println m
+        assert m.pos[0] == 2160180
+    } 
+    
+    @Test
+    void readFromReaderWithHeaders() {
+        File f = new File('src/test/data/test_headers.cov.tsv')
+        
+        f.withWriter { w ->
+            w.println(['chr','pos','s1','s2'].join('\t'))
+            w.println(new File('src/test/data/test.cov.tsv').text)
+        }
+        
+        Matrix m = Matrix.load(f.newReader())
+        println m
+        assert Math.abs(m.pos[0] - 2160180) < 0.001
+    }  
 }
