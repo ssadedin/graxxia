@@ -1,3 +1,9 @@
+
+plugins {
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id "com.github.johnrengelman.shadow" version "4.0.0"
+ }
+
 apply plugin: 'groovy'
 apply plugin: 'java'
 
@@ -13,6 +19,12 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom 'com.github.fommil.netlib:all:1.1.2'
+    }
+}
+
 configurations {
   compile
 }
@@ -24,16 +36,29 @@ dependencies {
      compile 'com.lowagie:itext:2.1.7'
      compile 'org.apache.commons:commons-math3:3.5'
      compile group: 'com.github.haifengl', name: 'smile-core', version: '1.5.2'
+     compile group: 'com.github.haifengl', name: 'smile-netlib', version: '1.5.2'
+     compile group: 'com.github.haifengl', name: 'smile-plot', version: '1.5.2'
+
+     compile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
+
+     
+      compile group: 'com.github.fommil.netlib', name: 'all', version: '1.1.2'
+//     compile group: 'com.github.fommil.netlib', name: 'all', version: '1.1.2', ext: 'pom'
+     
+     
+//      compile group: 'com.github.fommil', name: 'jniloader', version: '1.1'     
+
      compile 'junit:junit:4.4'
      compile 'commons-cli:commons-cli:1.4'
      compile 'com.xlson.groovycsv:groovycsv:1.0'
      compile 'log4j:log4j:1.2.17'
+     
      compile files(fileTree(dir:'lib', includes:['*.jar']))
 }
 
 // Bundle all dependencies into output library
 jar {
-    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    from configurations.compile.collect { (it.isDirectory() || it.name.endsWith('.pom')) ? it : zipTree(it) }
     exclude "groovy/**"
     exclude "org/codehaus/**"
     exclude "META-INF/groovy*"
