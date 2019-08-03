@@ -197,9 +197,15 @@ class TSV implements Iterable<PropertyMapper> {
                 }
             }
             catch(NumberFormatException e) {
-                // Ignore
-                // This just leaves the unconverted (string) value in 
-                // place
+                if(type.is(Integer) && values[index].isDouble()) {
+                    columnTypes[index] = Double
+                    --index
+                }
+                else { 
+                    // Ignore
+                    // This just leaves the unconverted (string) value in 
+                    // place
+                }
             }
         }
         return newValues

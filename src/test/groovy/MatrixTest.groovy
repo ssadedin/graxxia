@@ -747,4 +747,9 @@ class MatrixTest {
         println m
         assert Math.abs(m.pos[0] - 2160180) < 0.001
     }  
+    
+    @Test
+    void readInconsitentNumericTypes() {
+       Matrix m = Matrix.load('src/test/data/test.inconsistent.tsv', r:true) 
+    }
 }

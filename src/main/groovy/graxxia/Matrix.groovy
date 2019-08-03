@@ -1057,21 +1057,20 @@ class Matrix extends Expando implements Iterable, Serializable {
         else
         if(options.r) {
             names = firstLine.substring(1).trim().split("\t")
-            rfl = false
         }
         else {
             r.close()
             r = createReader(fileName)
         }
         
+        if('readFirstLine' in options)
+            rfl = options.readFirstLine
+        
         Map tsvOptions = [readFirstLine:rfl]
         if('columnTypes' in options) {
             tsvOptions.columnTypes = options.columnTypes
         }
 
-        if('readFirstLine' in options)
-            rfl = options.readFirstLine
-        
         List values = new TSV(tsvOptions, r)*.values
         Matrix m = new Matrix(values, names)
         return m
