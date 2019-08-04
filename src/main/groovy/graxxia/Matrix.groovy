@@ -1572,4 +1572,12 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         return new Matrix(data)
     }
+    
+    Matrix getReducedBasis(int numComponents) {
+        EJMLPCA pca = new EJMLPCA(this)
+        pca.computeBasis(numComponents)
+        new Matrix((0..<numComponents).collect { 
+            pca.getBasisVector(it)
+        })
+    }
 }
