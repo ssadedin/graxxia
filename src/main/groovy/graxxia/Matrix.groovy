@@ -27,6 +27,7 @@ import groovy.transform.CompileStatic;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
 
 /**
@@ -1521,5 +1522,53 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     SingularValueDecomposition svd() {
        new SingularValueDecomposition(this.matrix)
+    }
+    
+    @CompileStatic
+    Matrix getRowCorrelations() {
+        
+        final PearsonsCorrelation p = new PearsonsCorrelation()
+        
+        final double [][] subset = this.matrix.data
+        
+        Matrix subset_cov = (0..<rowDimension).collect { int i ->
+            double [] vals = new double[rowDimension]
+            for(int j=0; j<i; ++j) {
+                vals[j] = p.correlation(subset[i],subset[j])
+            }
+            return vals
+        } as Matrix
+        
+        return subset_cov.transform { double x, int i, int j ->
+           if(j>i) {
+               ((double[])(subset_cov[j]))[i]
+           }
+           else
+           if(i == j) {
+               1.0d
+           }
+           else {
+               x
+           }
+       }
+    }
+    
+    /**
+     * Concat the given matrices "vertically" (ie: stacking their rows)
+     * 
+     * @param matrixIter
+     * @return
+     */
+    @CompileStatic
+    static Matrix concat(Iterable<Matrix> matrixIter) {
+        List<Matrix> matrices = matrixIter.asList()
+        Array2DRowRealMatrix data = 
+            new Array2DRowRealMatrix((int)matrices*.rowDimension.sum(), matrices[0].columnDimension)
+        int rowIndex = 0
+        for(int i=0; i<matrices.size(); ++i) {
+            data.setSubMatrix(matrices[i].data, rowIndex, 0)
+            rowIndex += matrices[i].rowDimension
+        }
+        return new Matrix(data)
     }
 }

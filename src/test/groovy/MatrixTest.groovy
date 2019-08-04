@@ -752,4 +752,39 @@ class MatrixTest {
     void readInconsitentNumericTypes() {
        Matrix m = Matrix.load('src/test/data/test.inconsistent.tsv', r:true) 
     }
+    
+    @Test
+    void testGetRowCorrelations() {
+        Matrix m = new Matrix([
+            [2,3,4],
+            [7,8,9],
+            [6,5,4]
+        ])
+        
+        Matrix c = m.rowCorrelations
+        println c
+        
+        assert c[0][0] == 1
+        assert c[2][0] == -1
+        
+        m
+    }
+    
+    @Test
+    void testConcat() {
+        Matrix m1 = new Matrix([
+            [2,3,4],
+            [7,8,9],
+            [6,5,4]
+        ])
+        Matrix m2 = new Matrix([
+            [9,9,9],
+            [7,7,7],
+            [6,6,6]
+        ])
+        
+        Matrix result = Matrix.concat([m1, m2])
+        
+        println result
+  }
 }
