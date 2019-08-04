@@ -839,7 +839,8 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     Matrix multiply(Matrix m) {
-        new Matrix((Array2DRowRealMatrix)this.matrix.preMultiply(m.matrix))
+//        new Matrix((Array2DRowRealMatrix)this.matrix.preMultiply(m.matrix))
+        new Matrix((Array2DRowRealMatrix)m.matrix.preMultiply(this.matrix))
     }
     
     @CompileStatic
