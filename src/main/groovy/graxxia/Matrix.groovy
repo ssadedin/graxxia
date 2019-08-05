@@ -1570,7 +1570,13 @@ class Matrix extends Expando implements Iterable, Serializable {
             data.setSubMatrix(matrices[i].data, rowIndex, 0)
             rowIndex += matrices[i].rowDimension
         }
-        return new Matrix(data)
+        
+        Matrix result = new Matrix(data)
+        matrices[0].properties.each {  key, value ->
+            result.setProperty((String)key, matrices*.getProperty((String)key).sum())
+        }
+
+        return result
     }
     
     Matrix getReducedBasis(int numComponents) {

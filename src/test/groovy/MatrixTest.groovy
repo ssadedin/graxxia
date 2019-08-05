@@ -777,14 +777,33 @@ class MatrixTest {
             [7,8,9],
             [6,5,4]
         ])
+        
+        m1.foo = ['a','b','c']
+        
         Matrix m2 = new Matrix([
             [9,9,9],
             [7,7,7],
             [6,6,6]
         ])
+        m2.foo = ['d','e','f']
         
         Matrix result = Matrix.concat([m1, m2])
         
         println result
+        
+        assert result.foo == ['a','b','c','d','e','f']
   }
+  
+  @Test
+  void testDisplayPrecision() {
+        Matrix m1 = new Matrix([
+            [1/6,1/3,4],
+            [7,8,9],
+        ])      
+        
+        m1.@displayPrecision = 2
+        
+        println m1
+  }
+  
 }
