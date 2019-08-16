@@ -1057,6 +1057,11 @@ class Matrix extends Expando implements Iterable, Serializable {
             names = firstLine.substring(1).trim().split("\t")
         }
         else
+        if(firstLine.tokenize('\t').every { !it.isNumber() }) { // none numeric
+            names = firstLine.substring(1).trim().split("\t")
+            rfl = false
+        }
+        else
         if(options.r) {
             names = firstLine.substring(1).trim().split("\t")
         }
