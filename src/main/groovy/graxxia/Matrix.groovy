@@ -985,7 +985,6 @@ class Matrix extends Expando implements Iterable, Serializable {
        
         List<MatrixValueAdapter> types = nonMatrixCols.collect { colName ->
             adapters.find { MatrixValueAdapter adapter -> 
-                println "Find adapter for $colName"
                 Iterable col = (Iterable)me.getProperty((String)colName)
                 adapter.sniff(col.getAt(0)) 
             }
