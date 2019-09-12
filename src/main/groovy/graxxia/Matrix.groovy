@@ -1131,7 +1131,14 @@ class Matrix extends Expando implements Iterable, Serializable {
                if(!(value instanceof Double))
                    return String.valueOf(value).padRight(columnWidth)
                        
-               ((value < 0.0001d && value !=0 && value > -0.0001d) ? String.format("%1.6e",value) : format.format(value)).padRight(columnWidth)
+               String result
+               if(value < 0.0001d && value !=0 && value > -0.0001d)  {
+                   result = String.format("%1.6e",value)
+               }
+               else {
+                   result = format.format(value)
+               }
+               return result.padRight(columnWidth)
            }
            
            return ((rowCount++) + ":").padRight(rowNumWidth) + values.join(" ")  
