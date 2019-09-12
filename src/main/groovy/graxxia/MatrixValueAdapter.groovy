@@ -4,12 +4,15 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat
 import java.util.Date;
 
+import groovy.transform.CompileStatic
+
 /**
  * Defines an interface that can be implemented to allow integration of 
  * user-defined data types into Matrix and TSV / CSV parsing functions
  * 
  * @author ssadedin@gmail.com
  */
+@CompileStatic
 interface MatrixValueAdapter<T> {
     
     /**
@@ -35,6 +38,7 @@ interface MatrixValueAdapter<T> {
     T deserialize(Object obj) throws ParseException
 }
 
+@CompileStatic
 class NumberMatrixValueAdapter implements MatrixValueAdapter<Number> {
 
     @Override
@@ -54,6 +58,7 @@ class NumberMatrixValueAdapter implements MatrixValueAdapter<Number> {
     }
 }
 
+@CompileStatic
 class StringMatrixValueAdapter implements MatrixValueAdapter<Object> {
 
     @Override
