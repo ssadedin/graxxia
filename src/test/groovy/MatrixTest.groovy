@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import graxxia.*
 import groovy.time.TimeCategory;
+import smile.classification.RandomForest
+import smile.data.AttributeDataset
 
 class MatrixTest {
 
@@ -795,6 +797,34 @@ class MatrixTest {
   }
   
   @Test
+  void testReduce() {
+      
+      Matrix m = createRandomCorrelatedTestMatrix()
+      
+      Matrix r = m.reduce(2)
+      
+      println r
+      
+      Matrix b = m.getReducedBasis(2)
+      println b.metadata.loadings
+  }
+
+  
+  @Test
+  void testSmile() {
+      Matrix m = createRandomCorrelatedTestMatrix(500)
+      m.@names = ['Foo','Bar','Cat','Dog']
+      
+      int [] response = m.collect { it[0] > 0.5 ? 1 : 0 }
+      
+      println response
+      
+      RandomForest r = new RandomForest(m.attributes, m.data, response, 5, 1)
+      
+      println "Error is: " + r.error()
+  }
+  
+  @Test
   void testDisplayPrecision() {
         Matrix m1 = new Matrix([
             [1/6,1/3,4],
@@ -805,5 +835,33 @@ class MatrixTest {
         
         println m1
   }
+  
+  private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
+        double[][] data = new double[rows][4]
+        for(int i=0; i<rows; ++i) {
+            double x = Math.random()
+            double y = Math.random()
+            data[i][0] = x
+            data[i][1] = y
+            data[i][2] = x*2 + Math.random()*0.01
+            data[i][3] = y*2 + Math.random()*0.01
+        }
+
+        Matrix m = new Matrix(data)
+        return m
+    }
+    
+//  @Test
+//  void testLoadBug() {
+//     Matrix m = Matrix.load('src/test/data/test.headers_with_numeric.tsv')
+//     println(m)
+//  }
+//  
+////  @Test
+//  void testLoadPerformance() {
+//      Matrix m = Matrix.load('/Volumes/Space2/cnv/coeffv/covs.chr4.tsv.gz', columnNames: ['chr','pos','coeffv'] + (1..34)*.toString())
+//      println m.toString()
+//  }
+//  
   
 }

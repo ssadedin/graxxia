@@ -14,21 +14,19 @@ import java.lang.reflect.Method
 import java.nio.file.Files
 import java.nio.file.Path
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
-
-import com.xlson.groovycsv.PropertyMapper
-import groovy.lang.Closure;
-import groovy.transform.CompileStatic;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
-import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
+
+import com.xlson.groovycsv.PropertyMapper
+
+import groovy.transform.CompileStatic;
+import smile.data.Attribute
+import smile.data.NumericAttribute
 
 /**
  * Wraps an Apache-Commons-Math matrix of double values with a 
@@ -105,6 +103,13 @@ class Matrix extends Expando implements Iterable, Serializable {
     Array2DRowRealMatrix matrix
     
     List<String> names = []
+    
+    /**
+     * Optional information about the matrix. 
+     * <p>
+     * Useful to carry information about how a matrix was created.
+     */
+    Map<String,Object> metadata = [:]
     
     public Matrix(int rows, int columns) {
         matrix = new Array2DRowRealMatrix(rows, columns)
@@ -1590,27 +1595,49 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     }
     
+    @CompileStatic
     Matrix getReducedBasis(int numComponents) {
         EJMLPCA pca = new EJMLPCA(this)
         pca.computeBasis(numComponents)
         Matrix result = new Matrix((0..<numComponents).collect { 
             pca.getBasisVector(it)
-        })
+        } as double[][])
         
         List<Double> loading = (0..<numComponents).collect { 
             Math.sqrt(pca.W.get(it,it))
         } 
         
-        result.loading = loading
+        result.@metadata.loadings = loading
         return result
     }
     
+    @CompileStatic
     Matrix reduce(int numComponents) {
         EJMLPCA pca = new EJMLPCA(this)
         pca.computeBasis(numComponents)
         Matrix basis = new Matrix((0..<numComponents).collect { 
             pca.getBasisVector(it)
-        }) 
-        return basis * this.transpose()
+        } as double[][]) 
+        
+        List<Double> loading = (0..<numComponents).collect { 
+            Math.sqrt(pca.W.get(it,it))
+        } 
+  
+        Matrix result = basis // * this.transpose()
+        result.@metadata.loadings = loading
+        result.@metadata.basis =  basis
+        return result
+    }
+    
+    /**
+     * Return smile attributes for this matrix
+     * @return
+     */
+    @CompileStatic
+    Attribute[] getAttributes() {
+        if(this.@names)
+            return this.@names.collect { new NumericAttribute(it) } as Attribute[]
+        else
+            return this.columnDimension.collect { 'V' + it }.collect { new NumericAttribute(it) } as Attribute[]
     }
 }
