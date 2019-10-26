@@ -31,6 +31,10 @@ public class EJMLPCA {
     
     DMatrixRMaj W;
 
+    public DMatrixRMaj getW() {
+        return W;
+    }
+
     public EJMLPCA() {
     }
     
