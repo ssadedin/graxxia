@@ -28,6 +28,8 @@ public class EJMLPCA {
      * Mean values of each element across all the samples
      */
     double mean[];
+    
+    DMatrixRMaj W;
 
     public EJMLPCA() {
     }
@@ -109,7 +111,7 @@ public class EJMLPCA {
             throw new RuntimeException("SVD failed");
 
         V_t = svd.getV(null,true);
-        DMatrixRMaj W = svd.getW(null);
+        W = svd.getW(null);
 
         // Singular values are in an arbitrary order initially
         SingularOps_DDRM.descendingOrder(null,false,W,V_t,true);
