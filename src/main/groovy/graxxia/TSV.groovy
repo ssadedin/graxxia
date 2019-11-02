@@ -270,8 +270,26 @@ class TSV implements Iterable<PropertyMapper> {
        fileName.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader()  
     }
     
-    List<Map> toListMap() {
-        this.collect { [ it.columns*.key, it.values ].transpose().collectEntries() }
+    /**
+     * Consume all rows from this TSV and convert to ListMap object
+     * 
+     * @param normalizeColumns if true, columns will be lower cased and spaces replaced by underscores
+     * @return
+     */
+    @CompileStatic
+    List<Map> toListMap(boolean normalizeColumns=false) {
+        List<String> columnNames = null
+        this.collect { PropertyMapper row ->
+            if(columnNames == null) {
+                columnNames = ((Map<String,Object>)row.columns).collect { Map.Entry<String,Object> e -> e.key }
+                if(normalizeColumns) {
+                    columnNames = columnNames.collect { col -> col.toLowerCase().replaceAll(' {1,}','_') }
+                }
+            }
+            
+            
+            [ columnNames, row.values ].transpose().collectEntries() 
+        }
     }
 }
 
