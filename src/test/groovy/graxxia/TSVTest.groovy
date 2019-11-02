@@ -34,7 +34,7 @@ class TSVTest {
     
     @Test
     public void testGZipInput() {
-        new TSV("tests/test.gz").each {
+        new TSV("src/test/data/test.gz").each {
             println "Line: " + it
         }
     }
