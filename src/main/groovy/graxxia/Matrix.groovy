@@ -346,6 +346,14 @@ class Matrix extends Expando implements Iterable, Serializable {
         this.initFromList(rows,columns,data)
     }
     
+    /**
+     * Cooerces a vector into a Matrix by reshaping it. The vector must have 
+     * at least rows x columns elements.
+     * 
+     * @param rows
+     * @param columns
+     * @param data
+     */
     @CompileStatic
     void initFromList(int rows, int columns, List<Double> data) {
         matrix = new Array2DRowRealMatrix(rows, columns)
