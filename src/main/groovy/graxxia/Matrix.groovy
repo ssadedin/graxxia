@@ -29,11 +29,14 @@ import smile.data.Attribute
 import smile.data.NumericAttribute
 
 /**
- * Wraps an Apache-Commons-Math matrix of double values with a 
- * Groovy interface for convenient access. Because it wraps the
- * underlying matrix as a delegate, all the original methods of
+ * Wraps an Apache-Commons-Math matrix of double values and enhances
+ * it with support for non-matrix columns to create an experience 
+ * similar to R or Pandas DataFrames.
+ * <p>
+ * Matrix wraps the
+ * underlying matrix as a delegate, so all the original methods of
  * the Commons-Math implementation are available directly, along with
- * Groovy-enhanced versions.
+ * Groovy-enhanced methods and properties.
  * <p>
  * The most basic enhancements come in the form of random access operators 
  * that allowthe Matrix class to be referenced using square-bracket notation:
@@ -60,6 +63,22 @@ import smile.data.NumericAttribute
  * </pre>
  * Note that in the above code, both row-wise and column-wise access
  * occurs without copying any data.
+ * <p>
+ * Column names for the Matrix data can be assigned by setting the <code>@names</property>,
+ * which causes them to be displayed when the Matrix is printed and saved and
+ * restored by the save/load methods.
+ * <p>
+ * Arbitrary non-Matrix columns can be added. These columns can be numeric or non-numeric, but 
+ * in both cases they are treated separately and do not interact with the pure matrix 
+ * operations (eg: matrix multiplication, transpose, etc). To add a non-Matrix column, just assign a
+ * property to the Matrix with the name of the column. Eg: to create a Foo column:
+ * <pre>
+ * m.Foo = ["cat","tree","dog","house"]
+ * </pre>
+ * The non-Matrix columns will be preserved for a subset of the operations which do not change 
+ * the row/column associations of the matrix data elements. In general, however,
+ * if you perform a matrix operation you need to re-associate the custom columns 
+ * yourself.
  * <p>
  * Transforming the whole matrix can be done using <code>transform</code>:
  * <pre>
@@ -911,20 +930,44 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
+    /**
+     * Save the matrix in gzip compressed native memory format
+     * <p>
+     * This format is efficient but java-specific since it encodes the values as their native underlying memory format.
+     * 
+     * @param fileName  The file name to save as
+     */
     void saveBinary(String fileName) {
         ObjectOutputStream oStream = new ObjectOutputStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(fileName), 1024*1024)))
+        List<Serializable[]> userColumns  = this.properties.grep { it.value instanceof Iterable }.collect { [it.key, it.value] as Serializable[] }
         oStream.withStream { ObjectOutputStream o -> 
+            oStream << this.@names
+            oStream << userColumns
             o << this.matrix.dataRef
         }
     }
     
+    /**
+     * Read a matrix saved using {@link #saveBinary}
+     * @param fileName
+     * @return  Matrix object read from file
+     */
     static Matrix readBinary(String fileName) {
         ObjectInputStream iStream = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(new FileInputStream(fileName), 1024*1024)))
         double [][] data = null
+        List<Serializable[]> userColumns  = null
+        List<String> columnNames = null
         iStream.withStream { ObjectInputStream o ->
+            columnNames = iStream.readObject()
+            userColumns = iStream.readObject()
             data = iStream.readObject()
         }
-        return new Matrix(data)
+        Matrix result = new Matrix(data)
+        result.@names = columnNames
+        userColumns.each { obj ->
+            result.setProperty(obj[0], obj[1])
+        }
+        return result
     } 
     
     static Reader createReader(fileLike) {
