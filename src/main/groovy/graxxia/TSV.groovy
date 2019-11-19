@@ -83,7 +83,20 @@ class TSV implements Iterable<PropertyMapper> {
     CsvIterator newIterator() {
         if(!options.containsKey("separator"))
             options.separator = "\t"
-        CsvParser.parseCsv(options, reader())
+            
+        Reader originalReader = reader()
+        if(this.options.commentChar) {
+            Reader r = reader()
+            if(r.is(originalReader))
+                throw new IllegalArgumentException("The commentChar option cannot be used with a raw Reader. Please create a TSV with a fileName argument instead")
+                
+            int skipLines = 0
+            while(r.readLine()?.startsWith(this.options.commentChar))
+                ++skipLines
+            this.options.skipLines = this.options.get('skipLines',0) + skipLines
+        }
+        
+        CsvParser.parseCsv(options, originalReader)
     }
 	
     /*
@@ -115,8 +128,11 @@ class TSV implements Iterable<PropertyMapper> {
 //	}	
 //	
     
-	TSV(Reader reader, List<String> columnNames) {
-		parser = CsvParser.parseCsv(reader, columnNames: columnNames, readFirstLine: true, separator: '\t')
+	TSV(Map options=[:], Reader reader, List<String> columnNames) {
+        
+        this.options = [columnNames: columnNames, readFirstLine: true, separator: '\t'] + options
+        
+		parser = CsvParser.parseCsv(reader, options)
 	}		
     
     Iterator<PropertyMapper> iterator() {

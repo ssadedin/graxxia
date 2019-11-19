@@ -41,7 +41,7 @@ dependencies {
 
      compile 'junit:junit:4.4'
      compile 'commons-cli:commons-cli:1.4'
-     compile 'com.xlson.groovycsv:groovycsv:1.0'
+     compile 'com.xlson.groovycsv:groovycsv:1.3'
      compile 'log4j:log4j:1.2.17'
      compile files(fileTree(dir:'lib', includes:['*.jar']))
 }
