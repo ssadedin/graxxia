@@ -1,5 +1,6 @@
 package graxxia;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 
 public class MatrixColumnIterator implements Iterator<Double> {
@@ -10,11 +11,16 @@ public class MatrixColumnIterator implements Iterator<Double> {
     private final int max;
     
     public MatrixColumnIterator(double [][] values, int columnIndex) {
-        this.values = values;
-        this.columnIndex = columnIndex;
-        this.max = values.length;
+        this(values, columnIndex, 0, values.length-1);
     }
 
+    public MatrixColumnIterator(double [][] values, int columnIndex, int rowOffset, int rowLimit) {
+        this.values = values;
+        this.columnIndex = columnIndex;
+        this.max = rowLimit < 0 ? values.length : rowLimit;
+        this.rowIndex = rowOffset;
+    }
+    
     @Override
     public boolean hasNext() {
         return rowIndex < max;
@@ -22,6 +28,8 @@ public class MatrixColumnIterator implements Iterator<Double> {
 
     @Override
     public Double next() {
+        if(rowIndex>=max)
+            throw new NoSuchElementException("Matrix column " + columnIndex + " does not have " + rowIndex + " rows within limit " + max);
         return values[rowIndex++][columnIndex];
     }
 

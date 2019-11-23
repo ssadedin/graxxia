@@ -35,6 +35,10 @@ class MatrixColumn implements Iterable {
     
     int columnIndex
     
+    int rowOffset = 0
+    
+    int rowLimit  = -1
+    
     Matrix sourceMatrix
     
     MatrixColumn() {
@@ -43,12 +47,25 @@ class MatrixColumn implements Iterable {
     
     String name
     
+    Object getAt(int index) {
+        return this.byIndex((Object)index)
+    }
+    
     Object getAt(Object index) {
+        this.byIndex(index)
+    }
+    
+    Object byIndex(Object index) {
         if(index instanceof Integer)
-            sourceMatrix.matrix.dataRef[(int)index][columnIndex]
+            sourceMatrix.matrix.dataRef[(int)index + rowOffset][columnIndex]
         else
-        if(index instanceof List)
-            sourceMatrix.matrix.dataRef[(List)index].collect { double [] values ->  values[columnIndex] }
+        if(index instanceof List) {
+            List indices = (List)index
+            if(rowOffset > 0 || rowLimit < 0) {
+                indices = indices[rowOffset..rowLimit].collect { ((int)it) + rowOffset }
+            }
+            sourceMatrix.matrix.dataRef[indices].collect { double [] values ->  values[columnIndex] }
+        }
     }
     
     double getDoubleAt(int index) {
@@ -56,16 +73,30 @@ class MatrixColumn implements Iterable {
     }
     
     int size() {
-        sourceMatrix.matrix.rowDimension
+        if(rowLimit < 0)
+            sourceMatrix.matrix.rowDimension
+        else
+            rowLimit - rowOffset
     }
     
     Object asType(Class c) {
         if(c == List) {
-            return sourceMatrix.matrix.getColumn(columnIndex) as List
+            List result = sourceMatrix.matrix.getColumn(columnIndex) as List
+            if(rowOffset > 0 || rowLimit > 0) {
+                return result [rowOffset..rowLimit]
+            }
+            else {
+                return result
+            }
         }
         else
         if(c == double[]) {
-            return sourceMatrix.matrix.getColumn(columnIndex)
+            if(rowOffset > 0 || rowLimit > 0) {
+                return sourceMatrix.matrix.getSubMatrix(rowOffset, rowLimit, columnIndex, columnIndex)
+            }
+            else {
+                return sourceMatrix.matrix.getColumn(columnIndex)
+            }
         }
         else {
             return super.asType(c)
@@ -73,7 +104,7 @@ class MatrixColumn implements Iterable {
     }
     
     Iterator iterator() {
-        return new MatrixColumnIterator(this.sourceMatrix.matrix.dataRef, this.columnIndex)
+        return new MatrixColumnIterator(this.sourceMatrix.matrix.dataRef, this.columnIndex, rowOffset, rowLimit)
     }
     
     boolean equals(Object o) {

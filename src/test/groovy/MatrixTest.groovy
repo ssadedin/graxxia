@@ -66,6 +66,8 @@ class MatrixTest {
         println "m[][2] = " + m.columns[2]
         println "m[][2] = " + m[][2]
         println "m[][2][3] = " + m[][2][3]
+        def c = m[][2]
+        
         assert m[][2][3] == 6d
     }
     
@@ -611,6 +613,21 @@ class MatrixTest {
 
     
     @Test
+    void testGrepNumericWithNames() {
+        Matrix m = new Matrix([
+            [0,1,2,3],
+            [4,5,6,7],
+            [8,9,10,11]
+        ])
+        
+        m.@names = ["frog","cat","dog","person"]
+        
+        println m
+        
+        println m.grep { cat > 1 }
+    }
+    
+    @Test
     void testNoNumeric() {
         
         Matrix m = new Matrix([ 
@@ -836,6 +853,90 @@ class MatrixTest {
         println m1
   }
   
+  @Test
+  void testSaveBinary() {
+      Matrix m = [
+          foo: [1,2,3,4,5],
+          bar: [6,7,8,9,10]
+      ]
+      
+      m.stuff = ["cat","dog","tree","house","camel","dolphin"]
+      
+      println "Saving: \n" + m
+      
+      m.saveBinary("test.bin.gz")
+      
+      Matrix m2 = m.readBinary("test.bin.gz")
+      
+      println m2
+  }
+  
+  @Test
+  void testWindow() {
+      
+      Matrix m = new Matrix(
+          (1..10).collect { [ it, it+1, it+2] as double[] },
+          
+      )
+      m.@names = ['a','b','c']
+      
+      println(m)
+      
+      List results = m.window(0,3).collect { it }
+      
+      println "window 0 = " + results[0]
+      
+      assert results[0][0] == [1,2,3]
+      assert results[0][1] == [2,3,4]
+      assert results[0][2] == [3,4,5]
+      
+      assert results[0].size() == 3
+      
+      List means =    m.window(0,3).collect { 
+              List values = it.col(1).collect { it }
+              def mean = Stats.mean( it.col(1).collect { it })
+              println mean
+              return mean
+          }
+          
+      println "Windowed mean of column 1 is: " + means
+      
+      assert (int)means[0] == (int)3
+      assert (int)means[3] == (int)6
+      
+      means = m.window(0,3).collect { 
+          def mean = Stats.mean( it.collect { sm ->
+              sm[1] 
+          })
+          return mean
+      } 
+      println "Windowed mean of column 1 via direct access is: " + means
+     
+      assert (int)means[0] == (int)3
+      assert (int)means[3] == (int)6
+  }
+  
+  @Test
+  void testWindowNamedColumnAccess() {
+      
+      Matrix m = new Matrix(
+          (1..10).collect { [ it, it+1, it+2] as double[] },
+          
+      )
+      m.@names = ['a','b','c']
+      
+      println(m)
+      
+      def means = m.window(0,3).collect { 
+//          println(it.b.join(','))
+          def mean = Stats.mean( it.b)
+          return mean
+     }       
+     
+     assert (int)means[0] == (int)3
+     assert (int)means[3] == (int)6     
+  }
+    
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
         for(int i=0; i<rows; ++i) {
@@ -849,7 +950,10 @@ class MatrixTest {
 
         Matrix m = new Matrix(data)
         return m
-    }
+  }
+  
+  
+    
     
 //  @Test
 //  void testLoadBug() {

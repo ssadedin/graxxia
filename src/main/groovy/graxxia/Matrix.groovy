@@ -1647,6 +1647,33 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     @CompileStatic
+    Iterator<SubMatrix> window(int offset, int rows) {
+       new Iterator() {
+           
+           int windowStart = offset
+           int i=offset + rows
+           
+           final int numRows = matrix.rowDimension
+          
+           @CompileStatic
+           boolean hasNext() {
+               return i<numRows;
+           }
+           
+           @CompileStatic
+           SubMatrix next() {
+               ++i
+               new SubMatrix(Matrix.this, windowStart++, rows)
+           }
+           
+           @CompileStatic
+           void remove() { 
+               throw new UnsupportedOperationException() 
+           }
+       }         
+    }
+    
+    @CompileStatic
     Matrix getReducedBasis(int numComponents) {
         EJMLPCA pca = new EJMLPCA(this)
         pca.computeBasis(numComponents)
