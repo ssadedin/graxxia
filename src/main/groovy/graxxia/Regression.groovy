@@ -65,12 +65,14 @@ class Regression {
     public Regression() {
     }
     
-    void model(Closure c) {
+    Regression model(Closure c) {
         c.delegate = this
         c.resolveStrategy = Closure.DELEGATE_FIRST
         use(RegressionCategory) {
             c()
         }
+        
+        return this
     }
     
     def propertyMissing(String name) {
