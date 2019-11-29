@@ -74,7 +74,6 @@ class Regression {
     }
     
     def propertyMissing(String name) {
-        println "Creating regression variable $name"
         new RegressionVariable(name:name, model: this)
     }
     
@@ -86,7 +85,7 @@ class Regression {
     void run(def response, Matrix data) {
         def columns = data.getColumns(predictors.collect {it .name})
         def predictorData = new Matrix(columns)
-        model.newSampleData(response as double[], predictorData.transpose().dataRef)
+        model.newSampleData(response as double[], predictorData.dataRef)
     }
     
     String toString() {
