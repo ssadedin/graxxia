@@ -127,6 +127,7 @@ class Regression {
             result += coeffs[index] * data[index]
             ++index
         }
+        return result
     }
     
     @CompileStatic
