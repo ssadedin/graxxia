@@ -13,6 +13,8 @@ package graxxia
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import org.codehaus.groovy.runtime.NullObject;
 
+import groovy.transform.CompileStatic
+
 class RegressionCategory {
     static RegressionVariable bitwiseNegate(RegressionVariable x)     {
         x.model.predictors = [x]
@@ -53,6 +55,21 @@ class RegressionVariable {
     }
 }
 
+/**
+ * A simple class supporting a mini DSL to make linear regression more natural 
+ * <p>
+ * Example:
+ * <code>
+ * Matrix m = new Matrix(cow: [1,2,3,4], tree: [5,6,7,8])
+ * r = new Regression().model {
+ *   grass ~ cow + tree
+ * }
+ * response = [10,11,12,13]
+ * r.run(response, m)
+ * println("Predicted value of 11.5 is" + r.predict([11.5]))
+ * </code>
+ * @author Simon Sadedin
+ */
 class Regression {
     
     RegressionVariable response
@@ -61,6 +78,10 @@ class Regression {
     
     @Delegate
     OLSMultipleLinearRegression model = new OLSMultipleLinearRegression()
+    
+    Matrix beta
+    
+    double offset
 
     public Regression() {
     }
@@ -84,10 +105,38 @@ class Regression {
         this.predictors  = args[0] instanceof List ? args.flatten() : [args[0]]
     }
     
-    void run(def response, Matrix data) {
+    Regression run(def response, Matrix data) {
         def columns = data.getColumns(predictors.collect {it .name})
         def predictorData = new Matrix(columns)
         model.newSampleData(response as double[], predictorData.dataRef)
+        
+        double [] coeffs = model.estimateRegressionParameters()
+        
+        this.beta = new Matrix([coeffs[1..-1]])
+        this.offset = coeffs[0]
+        
+        return this
+    }
+    
+    @CompileStatic
+    double predict(Iterable<Double> data) {
+        double result = offset
+        double [] coeffs = beta[0]
+        int index = 0
+        for(double d in data) {
+            result += coeffs[index] * data[index]
+            ++index
+        }
+    }
+    
+    @CompileStatic
+    double predict(double [] data) {
+        double result = offset
+        double [] coeffs = beta[0]
+        for(int i=0; i<data.length; ++i) {
+            result += data[i] * coeffs[i]
+        }
+        return result
     }
     
     String toString() {
