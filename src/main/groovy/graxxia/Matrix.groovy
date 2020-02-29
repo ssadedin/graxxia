@@ -1707,6 +1707,24 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     }
     
+    @CompileStatic
+    Matrix reshape(final int rows, final int cols) {
+        final double [][] newData = new double[rows][cols]
+        final int oldCols = this.getColumnDimension()
+        int newRow = -1
+        int valueCount = 0
+        for(int i=0; i<this.size(); ++i) {
+            for(int j=0; j<oldCols; ++j) {
+                int newCol = valueCount % cols
+                if(newCol==0)
+                    ++newRow
+                newData[newRow][newCol] = this.dataRef[i][j]
+                ++valueCount
+            }
+        }
+        return new Matrix(newData)
+    }
+    
     /**
      * Return smile attributes for this matrix
      * @return

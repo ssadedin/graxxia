@@ -936,6 +936,22 @@ class MatrixTest {
      assert (int)means[0] == (int)3
      assert (int)means[3] == (int)6     
   }
+  
+  @Test
+  void testReshape() {
+        def m = new Matrix(4,2, [0d,1d,
+                                 2d,3d,
+                                 4d,5d,
+                                 6d,7d])
+       
+       def m2 = m.reshape(1,8)
+       
+       assert m2.rowDimension == 1
+       assert m2.columnDimension == 8
+       
+       assert m2[0][2] == 2d
+       assert m2[0][6] == 6d
+  }
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
