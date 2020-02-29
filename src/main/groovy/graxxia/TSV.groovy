@@ -60,6 +60,10 @@ class TSV implements Iterable<PropertyMapper> {
     
     static List<MatrixValueAdapter> formats = [ new DateMatrixValueAdapter()]
     
+    TSV(Map options=[:], File file) {
+        this(options, file.absolutePath)
+    }
+    
     TSV(Map options=[:], String fileName) {
         this.reader =  { 
             getReader(fileName)
