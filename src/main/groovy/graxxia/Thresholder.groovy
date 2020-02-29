@@ -56,6 +56,14 @@ interface ThresholdCondition<T> {
  * <p>
  * Statistics are captured for values that are classified as in the desired set. This allows determination
  * of the number and range of values that triggered the condition, etc.
+ * <p>Example:
+ * <pre>
+ *    Thresholder t = new Thresholder().threshold {
+ *        it > 5
+ *    }
+ *    t << [1,1,1,2,2,6,7,9,4,2,1,9,8]
+ * </pre>
+ *
  * 
  * @author Simon Sadedin
  */
