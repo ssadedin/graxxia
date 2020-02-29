@@ -204,13 +204,18 @@ class TSV implements Iterable<PropertyMapper> {
     
     @CompileStatic
     List<Object> convertColumns(String [] values, List columnTypes) {
-        List<Object> newValues = values as List
+        List<Object> newValues = new ArrayList(values.size())
         final int numColumns = Math.min(columnTypes.size(), values.size())
         for(int index = 0; index<numColumns; ++index) {
             def type = columnTypes[index]
             try {
-                if(type instanceof Class)
-                    newValues[index] = values[index].asType((Class)type)
+                if(type instanceof Class) {
+                    if(type == Integer) {
+                        newValues[index] = Integer.parseInt(values[index])
+                    }
+                    else
+                        newValues[index] = values[index].asType((Class)type)
+                }
                 else {
                     MatrixValueAdapter adapter = (MatrixValueAdapter)type
                     newValues[index] = adapter.deserialize(values[index])
