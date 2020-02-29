@@ -59,7 +59,7 @@ class RegressionVariable {
  * A simple class supporting a mini DSL to make linear regression more natural 
  * <p>
  * Example:
- * <code>
+ * <pre>
  * Matrix m = new Matrix(cow: [1,2,3,4], tree: [5,6,7,8])
  * r = new Regression().model {
  *   grass ~ cow + tree
@@ -67,7 +67,7 @@ class RegressionVariable {
  * response = [10,11,12,13]
  * r.run(response, m)
  * println("Predicted value of 11.5 is" + r.predict([11.5]))
- * </code>
+ * </pre>
  * @author Simon Sadedin
  */
 class Regression {
