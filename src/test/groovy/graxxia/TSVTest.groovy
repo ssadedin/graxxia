@@ -95,7 +95,24 @@ class TSVTest {
         
     }
     
+    @Test
+    void 'read a TSV with skip lines and headers'() {
+       TSV tsv = new TSV('src/test/data/tsv_with_comments_and_headers.tsv', skipLines:4) 
+       
+       def lm = tsv.toListMap()
+       
+       assert lm[0].DatabaseID == 'OMIM:210100'
+    }
     
+    @Test
+    void 'read a TSV with comment lines and headers'() {
+       TSV tsv = new TSV('src/test/data/tsv_with_comments_and_headers.tsv', commentChar:'#') 
+       
+       def lm = tsv.toListMap()
+       
+       assert lm[0].DatabaseID == 'OMIM:210100'
+    }
+     
     Reader toTsv(List values) {
         new StringReader(values*.join("\t").join("\n").trim().stripIndent())
     }
