@@ -319,7 +319,7 @@ public class FastNormal extends AbstractRealDistribution {
 
     @Override
     public String toString() {
-        return "FastNormal [mean=" + mean + ", standardDeviation=" + standardDeviation + "]";
+        return "N[m=" + mean + ", sd=" + standardDeviation + "]";
     }
     
 }
