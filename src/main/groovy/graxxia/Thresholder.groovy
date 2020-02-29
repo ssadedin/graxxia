@@ -159,7 +159,7 @@ class Thresholder<T> extends Expando {
                 twoArg = this.condition.maximumNumberOfParameters == 2
             }
             
-            result = twoArg ? condition(value, activeValue) : condition(value)
+            result = twoArg ? condition.call(value, activeValue) : condition.call(value)
         }
         
         if((!result.is(null) && (result != false))) { 
@@ -170,7 +170,7 @@ class Thresholder<T> extends Expando {
                 minIndex = index
                 maxIndex = index
                 if(!init.is(null)) {
-                    this.activeValue = init(value, activeValue)
+                    this.activeValue = init.call(value, activeValue)
                 }
             }
             
