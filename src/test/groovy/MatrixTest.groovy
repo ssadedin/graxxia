@@ -144,12 +144,25 @@ class MatrixTest {
     
     @Test
     void testNamedColumns() {
-        Matrix m = new Matrix([[2,5,3,3,4], [5,6,7,2,4]])
+        Matrix m = new Matrix([
+            [2,5,3,3,4], 
+            [5,6,7,2,4]
+        ])
         m.names = ["foo","bar"]
         
         println "Second column is " + m.getColumns(["bar"]) 
         
         assert m.getColumns(["bar"])[0] == [5d,6d]
+        
+        assert m.bar == [5d,6d]
+        
+        m.names = ((1..2).collect { "S$it" })
+        
+        println(m.S1)
+
+        assert m.S1 == [2d,5d]
+
+        
     }
     
     @Test

@@ -1289,23 +1289,39 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     void setColumnNames(List<String> names) {
-        this.names = names
+        setNames(names)
     }
     
     void setNames(List<String> names) {
-        this.names = names
+        this.names = names*.toString()
     }
     
     Object getProperty(String name) {
-        if(name in this.@names) {
+        println "Access property " + name
+        if(this.@names.contains(name)) {
             return this.col(this.@names.indexOf(name))
         }
         
        def result = super.getProperty(name)
-       if(result == null) 
-           throw new IllegalArgumentException("No column named $name in this Matrix")
+       if(result == null) {
+
+           String suggestedColumns = ""
+           if(this.@names) {
+               suggestedColumns = ". Valid columns are: " + this.@names.join(', ')
+           }
+           throw new IllegalArgumentException("No column named $name or matching property in this Matrix$suggestedColumns")
+       }
            
        return result
+    }
+    
+    void setProperty(String name, Object value) {
+        if(name == "names" || name == "columnNames") {
+            this.setNames(value)
+        }
+        else {
+            super.setProperty(name,value)
+        }
     }
     
     static Matrix fromListMap(List<Map> valueList) {
