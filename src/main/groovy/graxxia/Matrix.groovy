@@ -267,6 +267,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(!nonNumerics.isEmpty() && columnNames == null)
             throw new IllegalArgumentException("Column names must be provided as second argument when non-numeric columns are used")
         
+        
         final int columnCount = isNumerics.size()
         
         int rowIndex = 0
@@ -301,7 +302,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         matrix = new Array2DRowRealMatrix((double[][])data.toArray(), false)
         if(columnNames)
-            this.@names = [columnNames,isNumerics].transpose().grep { List i -> i[1] }.collect { Object i -> ((List)i)[0] }
+            this.setNames((List<String>)([columnNames,isNumerics].transpose().grep { List i -> i[1] }.collect { Object i -> ((List)i)[0] }))
             
         int nonNumericIndex = 0
         isNumerics.eachWithIndex { isNumeric, index ->
@@ -1103,31 +1104,37 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         boolean rfl = true
         
+        Closure reRead = {
+            r.close()
+            r = createReader(fileName)
+        }
+
         if(options.columnNames) {
             names = options.columnNames
-            rfl = false
+            rfl = true
+            reRead()
         }
         else
         if(firstLine.startsWith('#')) {
             names = firstLine.substring(1).trim().split("\t")
+            rfl = true // since we do not reRead(), we already read the column names,
+                       // data should start reading from the current "first line"
         }
         else
         if(firstLine.tokenize('\t').every { !it.isNumber() }) { // none numeric
             names = firstLine.substring(1).trim().split("\t")
-            rfl = false
+            rfl = true
         }
         else
         if(options.r) {
             names = firstLine.substring(1).trim().split("\t")
+            rfl = true
         }
-        else {
-            r.close()
-            r = createReader(fileName)
-        }
-        
+
         if('readFirstLine' in options)
             rfl = options.readFirstLine
-        
+
+      
         Map tsvOptions = [readFirstLine:rfl]
         if('columnTypes' in options) {
             tsvOptions.columnTypes = options.columnTypes

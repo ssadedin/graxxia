@@ -162,7 +162,12 @@ class MatrixTest {
 
         assert m.S1 == [2d,5d]
 
+        Matrix m2 = new Matrix([
+            [2,5,3,3,4], 
+            [5,6,7,2,4]
+        ], ["foo","bar"])
         
+        assert m2.foo == [2d,5d]
     }
     
     @Test
@@ -182,6 +187,11 @@ class MatrixTest {
         assert m3.rowDimension == 2
         assert m3.names == ["foo","bar","cat","dog","tree"]
         
+        Matrix m4 = new Matrix([[2,5,3,3,4], [5,6,7,2,4]])
+        m4.save("test2.tsv")
+        
+        Matrix m5 = Matrix.load('test2.tsv', columnNames:(1..5).collect { "S$it" }, readFirstLine: true)
+        assert m5.S1 == [2d,5d]
     }
     
     @Test
