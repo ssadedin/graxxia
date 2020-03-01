@@ -1297,7 +1297,6 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     Object getProperty(String name) {
-        println "Access property " + name
         if(this.@names.contains(name)) {
             return this.col(this.@names.indexOf(name))
         }
@@ -1607,6 +1606,24 @@ class Matrix extends Expando implements Iterable, Serializable {
     SingularValueDecomposition svd() {
        new SingularValueDecomposition(this.matrix)
     }
+    
+    double[][] getTruncatedSVD(final int k) {
+        SingularValueDecomposition svd = new SingularValueDecomposition(this.matrix);
+    
+        double[][] truncatedU = new double[svd.getU().getRowDimension()][k];
+        svd.getU().copySubMatrix(0, truncatedU.length - 1, 0, k - 1, truncatedU);
+    
+        double[][] truncatedS = new double[k][k];
+        svd.getS().copySubMatrix(0, k - 1, 0, k - 1, truncatedS);
+    
+        double[][] truncatedVT = new double[k][svd.getVT().getColumnDimension()];
+        svd.getVT().copySubMatrix(0, k - 1, 0, truncatedVT[0].length - 1, truncatedVT);
+    
+        RealMatrix approximatedSvdMatrix = (new Array2DRowRealMatrix(truncatedU)).multiply(new Array2DRowRealMatrix(truncatedS)).multiply(new Array2DRowRealMatrix(truncatedVT));
+    
+        return approximatedSvdMatrix.getData();
+    }
+
     
     @CompileStatic
     Matrix getRowCorrelations() {
