@@ -975,6 +975,35 @@ class MatrixTest {
        assert m2[0][2] == 2d
        assert m2[0][6] == 6d
   }
+  
+  @Test
+  void testNormaliseRows() {
+        def m = new Matrix(4,2, [0d,1d,
+                                 2d,3d,
+                                 4d,5d,
+                                 6d,7d])
+      
+        def n = m.normaliseRows()
+        
+        assert n[0][0]  == 0d
+        assert n[3][0]  == (6d / (6d + 7d))
+
+  }
+  
+  @Test
+  void testNormaliseColumns() {
+        def m = new Matrix(4,2, [0d,1d,
+                                 2d,3d,
+                                 4d,5d,
+                                 6d,7d])
+      
+        def n = m.normaliseColumns()
+        
+        assert n[0][0]  == 0d
+        assert n[3][0]  == 6d / 12d
+        assert n[3][1]  == 7d / 16d
+  }
+  
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
