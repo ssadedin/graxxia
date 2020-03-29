@@ -741,9 +741,31 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     Matrix normaliseRows() {
-        Matrix result = this.transformRows { double [] row ->
-            row*.div(Stats.mean(row)).collect { Double.isFinite(it) ? it : 0 }
+        
+        final int cols = this.matrix.getColumnDimension()
+        
+        final Matrix result = this.transformRows { double [] row ->
+            
+            double mean = Stats.mean(row)
+            
+            double [] rowResult = new double[row.size()]
+            if(mean == 0d)
+                return rowResult
+
+            for(int i=0; i<cols; ++i) {
+                rowResult[i] = row[i] / mean
+                if(!Double.isFinite(rowResult[i])) {
+                    rowResult[i] = 0.0d
+                }
+            }
+            return rowResult
         }
+        
+        result.@displayColumns = this.@displayColumns
+        if(this.@names)
+            this.transferPropertiesToRows(result)
+ 
+        return result
     }
     
     @CompileStatic
@@ -762,6 +784,12 @@ class Matrix extends Expando implements Iterable, Serializable {
                 normalised[j][i] = raw[j][i] / mean
             }
         }
+        Matrix result = new Matrix(normalised)
+        result.@displayColumns = this.@displayColumns
+        if(this.@names)
+            this.transferPropertiesToRows(result)
+            
+        return result
     }
  
     
@@ -807,7 +835,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             throw new IllegalArgumentException("Closure must accept 1 or two arguments")
         
         Matrix result = new Matrix(new Array2DRowRealMatrix(newData,false))
-        if(names)
+        if(names && result.columnDimension == cols)
             result.names = names
         return result
     }

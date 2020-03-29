@@ -986,7 +986,7 @@ class MatrixTest {
         def n = m.normaliseRows()
         
         assert n[0][0]  == 0d
-        assert n[3][0]  == (6d / (6d + 7d))
+        assert n[3][0]  == (6d / (6.5d))
 
   }
   
@@ -1000,8 +1000,8 @@ class MatrixTest {
         def n = m.normaliseColumns()
         
         assert n[0][0]  == 0d
-        assert n[3][0]  == 6d / 12d
-        assert n[3][1]  == 7d / 16d
+        assert n[3][0]  == 6d / 3d
+        assert n[3][1]  == 7d / 4d // mean of second column
   }
   
     
