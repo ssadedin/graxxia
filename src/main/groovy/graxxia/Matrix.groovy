@@ -1768,7 +1768,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             Math.sqrt(pca.W.get(it,it))
         } 
   
-        Matrix result = basis // * this.transpose()
+        Matrix result = this.multiply(basis.transpose())
         result.@metadata.loadings = loading
         result.@metadata.basis =  basis
         return result
