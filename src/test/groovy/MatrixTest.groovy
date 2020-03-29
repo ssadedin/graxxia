@@ -5,7 +5,9 @@ import org.junit.Test;
 import graxxia.*
 import groovy.time.TimeCategory;
 import smile.classification.RandomForest
-import smile.data.AttributeDataset
+import smile.data.DataFrame
+//import smile.data.AttributeDataset
+import smile.data.formula.Formula
 
 class MatrixTest {
 
@@ -850,19 +852,27 @@ class MatrixTest {
   }
 
   
-  @Test
-  void testSmile() {
-      Matrix m = createRandomCorrelatedTestMatrix(500)
-      m.@names = ['Foo','Bar','Cat','Dog']
-      
-      int [] response = m.collect { it[0] > 0.5 ? 1 : 0 }
-      
-      println response
-      
-      RandomForest r = new RandomForest(m.attributes, m.data, response, 5, 1)
-      
-      println "Error is: " + r.error()
-  }
+//  @Test
+//  void testSmile() {
+//      Matrix m = createRandomCorrelatedTestMatrix(500)
+//      m.@names = ['Foo','Bar','Cat','Dog']
+//      
+//      double [] response = m.collect { it[0] > 0.5 ? 1d : 0d }
+//      
+//      println response
+//      
+//      DataFrame df = DataFrame.of(m.dataRef, *m.@names)
+//      
+//      DataFrame responseDf = DataFrame.of([response] as double[][], "y")
+//
+//      Formula f = Formula.of("y", m.@names)
+//      
+////      RandomForest r = new RandomForest(m.attributes, m.data, response, 5, 1)
+//
+//      RandomForest r = RandomForest.fit(f, df)
+//      
+//      println "Error is: " + r.error()
+//  }
   
   @Test
   void testDisplayPrecision() {

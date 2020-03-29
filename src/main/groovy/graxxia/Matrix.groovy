@@ -25,8 +25,9 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import com.xlson.groovycsv.PropertyMapper
 
 import groovy.transform.CompileStatic;
-import smile.data.Attribute
-import smile.data.NumericAttribute
+
+//import smile.data.Attribute
+//import smile.data.NumericAttribute
 
 /**
  * Wraps an Apache-Commons-Math matrix of double values and enhances
@@ -1824,11 +1825,11 @@ class Matrix extends Expando implements Iterable, Serializable {
      * Return smile attributes for this matrix
      * @return
      */
-    @CompileStatic
-    Attribute[] getAttributes() {
-        if(this.@names)
-            return this.@names.collect { new NumericAttribute(it) } as Attribute[]
-        else
-            return this.columnDimension.collect { 'V' + it }.collect { new NumericAttribute(it) } as Attribute[]
-    }
+//    @CompileStatic
+//    Attribute[] getAttributes() {
+//        if(this.@names)
+//            return this.@names.collect { new NumericAttribute(it) } as Attribute[]
+//        else
+//            return this.columnDimension.collect { 'V' + it }.collect { new NumericAttribute(it) } as Attribute[]
+//    }
 }
