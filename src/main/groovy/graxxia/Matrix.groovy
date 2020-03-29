@@ -738,6 +738,32 @@ class Matrix extends Expando implements Iterable, Serializable {
         return new Matrix(new Array2DRowRealMatrix(newData, false))
     }
     
+    @CompileStatic
+    Matrix normaliseRows() {
+        Matrix result = this.transformRows { double [] row ->
+            row*.div(Stats.mean(row)).collect { Double.isFinite(it) ? it : 0 }
+        }
+    }
+    
+    @CompileStatic
+    Matrix normaliseColumns() {
+        
+        final int rows = matrix.rowDimension
+        final int cols = matrix.columnDimension
+        final double[][] raw = this.dataRef
+        
+        double [][] normalised = new double[rows][cols]
+
+        for(int i=0; i<cols;++i) {
+            MatrixColumn column = col(i)
+            final double mean = Stats.mean(column)
+            for(int j=0; j<rows; ++j) {
+                normalised[j][i] = raw[j][i] / mean
+            }
+        }
+    }
+ 
+    
     /**
      * Transform the given matrix by passing each row to the given
      * closure. If the closure accepts two arguments then the 
