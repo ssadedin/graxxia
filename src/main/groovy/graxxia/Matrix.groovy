@@ -457,6 +457,7 @@ class Matrix extends Expando implements Iterable, Serializable {
                 double [][] submatrix = subsetRows(l)
                 Matrix result = new Matrix(new Array2DRowRealMatrix(submatrix))
                 result.@names = this.@names
+                result.@displayColumns = this.@displayColumns
                 if(!this.properties.isEmpty()) 
                     this.transferPropertiesToRows(result, l)
                 return result
