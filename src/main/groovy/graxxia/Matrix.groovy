@@ -25,6 +25,8 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import com.xlson.groovycsv.PropertyMapper
 
 import groovy.transform.CompileStatic;
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
 //import smile.data.Attribute
 //import smile.data.NumericAttribute
@@ -177,7 +179,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         int rows = sourceColumns.iterator().next().value.size()
         double[][] newData =  new double[rows][]
         List<String> numerics = sourceColumns.grep { 
-            def result = this.sniffIsNumeric(it.value) 
+            def result = sniffIsNumeric(it.value) 
             return result
         }*.key 
         
@@ -205,6 +207,12 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
         }
     }
+    
+    @CompileStatic
+    boolean sniffIsNumeric(String value) {
+        false
+    } 
+ 
     
     @CompileStatic
     boolean sniffIsNumeric(int [] values) {
@@ -534,6 +542,43 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     /**
+     * Execute the given closure <code>c</code> for each row in the Matrix
+     * and then pass the result to the given operation to transform the result
+     * 
+     * @param c
+     * @param operation
+     */
+    @CompileStatic
+    private void iterateRowsWithDelegate(Closure c, Closure operation) {
+        IterationDelegate delegate = new IterationDelegate(this)
+        boolean withDelegate = !this.properties.isEmpty() || this.@names
+        if(withDelegate) {
+            c = (Closure)c.clone()
+            c.setDelegate(delegate)
+        }
+        int rowIndex = 0;
+        if(c.maximumNumberOfParameters == 1) {
+            for(double [] row in matrix.dataRef) {
+                if(withDelegate)
+                    delegate.row = rowIndex
+                Object rowResult = c(row)
+                operation(rowIndex, row, rowResult)
+                ++rowIndex
+            }
+        }
+        else 
+        if(c.maximumNumberOfParameters == 2) {
+            for(double [] row in matrix.dataRef) {
+                if(withDelegate)
+                    delegate.row = rowIndex
+                Object rowResult = c(row)
+                operation(rowIndex, row, rowResult)
+                ++rowIndex
+            }
+        }
+    }
+    
+    /**
      * Iterates through a matrix row-wise, passing each row as an array of doubles
      * to the supplied closure.
      * <p>
@@ -557,28 +602,8 @@ class Matrix extends Expando implements Iterable, Serializable {
     @CompileStatic
     List collect(Closure c) {
         List<Object> results = new ArrayList(matrix.dataRef.size())
-        IterationDelegate delegate = new IterationDelegate(this)
-        boolean withDelegate = !this.properties.isEmpty() || this.@names
-        if(withDelegate) {
-            c = (Closure)c.clone()
-            c.setDelegate(delegate)
-        }
-        int rowIndex = 0;
-        if(c.maximumNumberOfParameters == 1) {
-            for(double [] row in matrix.dataRef) {
-                if(withDelegate)
-                    delegate.row = rowIndex++
-                results.add(c(row))
-            }
-        }
-        else 
-        if(c.maximumNumberOfParameters == 2) {
-            for(double [] row in matrix.dataRef) {
-                if(withDelegate)
-                    delegate.row = rowIndex
-                results.add(c(row, rowIndex))
-                ++rowIndex
-            }
+        this.iterateRowsWithDelegate(c) { int index, double [] row, Object rowResult ->
+            results.add(rowResult)
         }
         return results
     }    
@@ -1819,6 +1844,79 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
         }
         return new Matrix(newData)
+    }
+    
+    /**
+     * Partition this matrix based on the value returned by the given closure.
+     * <p>
+     * This method allows you to easily identify ranges of rows that satisfy a particular
+     * condition, or fall into any range of different classes. This method is a good substitute
+     * for using {@link #groupBy} when you only need to know the indexes of the rows that 
+     * satisfy the conditions, and when those indexes occur in runs, as it returns the indexes
+     * in ranges rather than the full list of values.
+     * <p>
+     * The closure is executed for each row, passing the, the double array for the row
+     * to the closure. Columns can be accessed by name using implicit variables for the 
+     * column names.
+     * <p>
+     * The returned result is used as a state classifier similar to usage with {@link #groupBy}.
+     * Whenever the returned state changes, the range of indices for which that state was constant
+     * will be captured and added as an IntRange to the result for that state value.
+     * <p>
+     * <pre>
+     *  Matrix m = Matrix.fromListMap([
+     *          [sun: 'sunny', temp: 20],
+     *          [sun: 'sunny', temp: 20],
+     *          [sun: 'cloudy', temp: 15],
+     *          [sun: 'cloudy', temp: 15],
+     *          [sun: 'sunny', temp: 14],
+     *          [sun: 'sunny', temp: 12],
+     *          [sun: 'sunny', temp: 20],
+     *  ])
+     *  
+     *  Map result = m.partition { [sun, temp>15] }
+     *  
+     *  println "The times when it was sunny but temperature <= 15 were: " + result[['sunny',false]]
+     * </pre>
+     * 
+     * @param c
+     * @return
+     */
+    @CompileStatic
+    Map<Object,List<IntRange>> partition(@ClosureParams(value=SimpleType, options=['double[]']) Closure c) {
+        
+        Map<Object,List<IntRange>> partitions = [:]
+        
+        Object state = null
+        int start = 0
+        
+        this.iterateRowsWithDelegate(c) { int index, double [] row, rowResult ->
+            
+            if(state.is(null))
+                state = rowResult
+            
+            if(state != rowResult) {
+                if(start != index) {
+                    List<IntRange> resultPartitions = partitions[state]
+                    if(resultPartitions.is(null)) {
+                        resultPartitions = []
+                        partitions.put(state, resultPartitions)
+                    }
+                    resultPartitions.add(start..<index)
+                    start = index
+                    state = rowResult
+                }
+            }
+        }
+        
+        List<IntRange> resultPartitions = partitions[state]
+        if(resultPartitions.is(null)) {
+            resultPartitions = []
+            partitions.put(state, resultPartitions)
+        }
+        resultPartitions.add(start..<rowDimension)
+        
+        return partitions
     }
     
     /**

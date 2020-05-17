@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import graxxia.*
 import groovy.time.TimeCategory;
+import groovy.transform.CompileStatic
 import smile.classification.RandomForest
 import smile.data.DataFrame
 //import smile.data.AttributeDataset
@@ -448,6 +449,88 @@ class MatrixTest {
         
         assert m.collect { x1 * x2 } == [2.0d,  8.0d, 18.0d, 32.0d, 50.0d]
         
+    }
+    
+    @Test
+    void testPartition() {
+        
+        def lm = [
+               [foo: 1, bar:2], // row 0
+               [foo: 4, bar:2], // row 1
+               [foo: 8, bar:1], // row 2 // transition to true
+               [foo: 3, bar:9], // row 3 // transition to false
+               [foo: 3, bar:9], // row 4
+               [foo: 3, bar:9], // row 5
+               [foo: 9, bar:9], // row 6
+               [foo: 7, bar:9], // row 7
+        ]
+
+        Matrix m = Matrix.fromListMap(lm)
+        
+        def result = m.partition {
+            foo > 5
+        }
+        
+        assert result.size() == 2
+        
+        assert result[true].size() == 2
+        assert result[false].size() == 2
+        
+        assert result[false][1].from == 3
+        assert result[false][1].to == 5
+        
+        assert result[true][0].from == 2
+        assert result[true][0].to == 2
+ 
+        
+    }
+    
+    
+    @Test
+    void testPartitionMultiKey() {
+        
+        def lm = [
+               [chr: 'chr1', pos: 0, cov: 1, bar:2], // row 0
+               [chr: 'chr1', pos: 1, cov: 4, bar:2], // row 1
+               [chr: 'chr1', pos: 2, cov: 8, bar:1], // row 2 // transition to true
+               [chr: 'chr1', pos: 3, cov: 3, bar:9], // row 3 // transition to false
+               [chr: 'chr1', pos: 4, cov: 3, bar:9], // row 4
+               [chr: 'chr2', pos: 0, cov: 3, bar:9], // row 5 // transition to [chr2,false]
+               [chr: 'chr2', pos: 1, cov: 3, bar:9], // row 6
+               [chr: 'chr2', pos: 2, cov: 9, bar:9], // row 7
+               [chr: 'chr2', pos: 3, cov: 7, bar:9], // row 8
+        ]
+
+        Matrix m = Matrix.fromListMap(lm)
+        
+        def result = m.partition {
+            [chr, cov > 5]
+        }
+        
+        assert result[['chr1',true]].size() == 1
+        assert result[['chr1',false]].size() == 2
+        assert result[['chr1',false]][1].to == 4
+
+        assert result[['chr2',false]].size() == 1
+        assert result[['chr2',false]][0].from == 5
+    }
+    
+    @Test
+    void testPartitionExample() {
+        Matrix m = Matrix.fromListMap([
+                [sun: 'sunny', temp: 20],
+                [sun: 'sunny', temp: 20],
+                [sun: 'cloudy', temp: 15],
+                [sun: 'cloudy', temp: 15],
+                [sun: 'sunny', temp: 14],
+                [sun: 'sunny', temp: 12],
+                [sun: 'sunny', temp: 20],
+        ])
+        
+        Map result = m.partition { [sun, temp>15] }
+        
+        println "The times when it was sunny but temperature <= 15 were: " + result[['sunny',false]]
+
     }
     
     @Test
