@@ -555,6 +555,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(withDelegate) {
             c = (Closure)c.clone()
             c.setDelegate(delegate)
+            c.setResolveStrategy(Closure.DELEGATE_FIRST)
         }
         int rowIndex = 0;
         if(c.maximumNumberOfParameters == 1) {
