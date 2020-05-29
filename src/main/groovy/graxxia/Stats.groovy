@@ -251,6 +251,11 @@ class Stats extends DescriptiveStatistics implements Serializable {
         percentile().getPercentile(50)
     }
     
+    @CompileStatic
+    static double median(double... values) {
+        Stats.from(values).getPercentile(50)
+    }
+    
      static median(int max, Closure c) {
         percentile(max,c).getPercentile(50)
     }
