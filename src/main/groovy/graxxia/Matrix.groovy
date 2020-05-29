@@ -59,6 +59,15 @@ import groovy.transform.stc.SimpleType
  * assert m[][0] == [1,3]
  * assert m[][1] == [2,4]
  * </pre>
+ * If the columns have names, they can be accessed that way too (with order
+ * respected if you provide a list - which is a way to re-order columns):
+ * <pre>
+ * Matrix m = new Matrix(foo: [1,2,3,4], bar: [5,6,7,8])
+ * assert m[]['foo'][0] == [1]
+ * assert m[]['foo','bar'][0] == [1,5]
+   assert m5[]['bar','foo'][0] == [5,1]
+ * </pre>
+ * 
  * Rows and columns can both be treated as normal Groovy collections:
  * <pre>
  * assert m[0].collect { it.any { it > 2 }  } == [ false, true ]

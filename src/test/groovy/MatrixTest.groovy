@@ -1097,6 +1097,36 @@ class MatrixTest {
         assert n[3][1]  == 7d / 4d // mean of second column
   }
   
+  @Test
+  void testMultipleColumnsByName() {
+      
+      Matrix m = new Matrix([
+          foo: 1..20,
+          bar: (2..40).step(2)
+      ])
+      
+      List cols = ['foo','bar']
+      
+      Matrix m2 = m[][cols]
+      
+      assert m2[0] == m[0]
+      m2.@names[1] == 'bar'
+      
+      Matrix m3 = m[]['foo','bar']
+      
+      assert m3[1] == m[1]
+      
+      Matrix m4 = m[]['foo']
+      
+      assert m4[1][0] == m[1][0]
+      
+      Matrix m5 = new Matrix(foo: [1,2,3,4], bar: [5,6,7,8])
+      assert m5[]['foo'][0] == [1]
+      assert m5[]['foo','bar'][0] == [1,5]
+      assert m5[]['bar','foo'][0] == [5,1]
+
+  }
+  
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
