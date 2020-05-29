@@ -40,6 +40,20 @@ class TSVTest {
     }
     
     @Test
+    public void testBGZipInput() {
+        
+        Reader reader = TSV.getReader("src/test/data/test.tsv.bgz")
+        
+        TSV tsv = new TSV(reader, columnNames: ['chr','pos','mean','coeffv','x','s1','s2','s3','s4','s5','s6','s7'])
+        for(line in tsv) {
+            println "Line: " + line
+            assert line != null
+            break
+        }
+    }
+ 
+    
+    @Test
     void testCSVFilter() {
         StringWriter s = new StringWriter()
         new CSV(new StringReader(testCsv), columnNames: ["name","species", "age","weight"], quote:true).filter(s) { line ->

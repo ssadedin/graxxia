@@ -9,7 +9,7 @@
  *  further details.
  */
 package graxxia
-
+ 
 import com.xlson.groovycsv.CsvParser;
 import com.xlson.groovycsv.CsvIterator;
 import com.xlson.groovycsv.PropertyMapper;
@@ -291,8 +291,8 @@ class TSV implements Iterable<PropertyMapper> {
         
     }
     
-    static getReader(String fileName) {
-       fileName.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader()  
+    static Reader getReader(String fileName) {
+       (fileName.endsWith(".gz") || fileName.endsWith(".bgz")) ? new GZIPInputStream(new FileInputStream(fileName)).newReader() : new File(fileName).newReader()  
     }
     
     /**
