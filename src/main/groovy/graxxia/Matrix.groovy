@@ -873,6 +873,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         Matrix result = new Matrix(new Array2DRowRealMatrix(newData,false))
         if(names && result.columnDimension == cols)
             result.names = names
+        result.@displayColumns = this.@displayColumns
         return result
     }
     
