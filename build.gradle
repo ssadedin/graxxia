@@ -63,6 +63,8 @@ jar {
         !it.name.startsWith('junit-') &&
         !it.name.startsWith('opentest4j-') &&
         !it.name.startsWith('testng-') &&
+        !it.name.startsWith('bcmail-') &&
+        !it.name.startsWith('ivy-') &&
         !it.name.contains('hamcrest')
         }.collect { 
             println(it.name); 
