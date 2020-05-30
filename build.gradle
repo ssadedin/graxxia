@@ -45,13 +45,31 @@ dependencies {
      compile 'junit:junit:4.4'
      compile 'commons-cli:commons-cli:1.4'
      compile 'com.xlson.groovycsv:groovycsv:1.3'
-     compile 'log4j:log4j:1.2.17'
+     compile group:'org.slf4j', name:'slf4j-jdk14', version: '1.7.5'            
+     // compile 'log4j:log4j:1.2.17'
      compile files(fileTree(dir:'lib', includes:['*.jar']))
 }
 
 // Bundle all dependencies into output library
 jar {
-    from configurations.compile.grep { !it.name.endsWith('.pom') }.collect { println(it.name); (it.isDirectory() && !it.name.endsWith('pom')) ? it : zipTree(it) }
+    from configurations.compile.grep { 
+        !it.name.endsWith('.pom') &&
+        !it.name.startsWith("cramtools") && 
+        !it.name.contains('log4j') &&
+        !it.name.startsWith('groovy-') &&
+        !it.name.contains('-linux-armhf-') &&
+        !it.name.contains('win-i686') &&
+        !it.name.contains('linux-i686') &&
+        !it.name.startsWith('junit-') &&
+        !it.name.startsWith('opentest4j-') &&
+        !it.name.startsWith('testng-') &&
+        !it.name.contains('hamcrest')
+        }.collect { 
+            println(it.name); 
+            
+            (it.isDirectory() && !it.name.endsWith('pom')) ? it : zipTree(it) 
+        }
+
     exclude "groovy/**"
     exclude "org/codehaus/**"
     exclude "META-INF/groovy*"
