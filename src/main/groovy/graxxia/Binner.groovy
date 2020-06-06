@@ -93,10 +93,12 @@ class Binner {
         Iterator yi = ys.iterator()
         for(Number x in xs) {
             double y = yi.next() as double
+            if(Double.isNaN((double)y))
+                continue
             int bin = (int)((x - min) / binSize)
             if(bin < 0)
                 continue
-            if(bin > max)
+            if(bin >= binCount)
                 continue
             result[bin].addValue(y)
         }
