@@ -9,6 +9,49 @@ import groovy.transform.CompileStatic
 /**
  * Facilitates easy binning of objects based on fixed bin sizes spanning an interval
  * 
+ * A binner is defined with a number of bins and a range of values the bins should span:
+ * <p>
+ * <pre>
+ * binner = new Binner(20, 0, 1) // 20 bins from zero to 1
+ * </pre>
+ * Then you can feed a set of values to the binner and it will assign each one to a bin,
+ * using several different functions. To just know which bin, use the {@link #bin} function:
+ * <pre>
+ * binIndex = binner.bin(0.63) // 12
+ * </pre>
+ * But more usefully, you can feed any iterables and calculate the statistics for values that
+ * fall into bins:
+ * <pre>
+ * stats = binner.stats(
+ *     [0,2,1,5,9,2,4,4],  // values for calculing bin
+ *     [10,5,20,1,3,5,2]   // calculate statistics of these values
+ * )
+ * </pre>
+ * If your goal is to do some kind of normalisation by bin, there is a convenient spline function
+ * to create a linear spline to model the values:
+ * <pre>
+ * fn = binner.stats(
+ *     [0,2,1,5,9,2,4,4],  // values for calculing bin
+ *     [10,5,20,1,3,5,2]   // calculate statistics of these values
+ * )
+ * prediction = fn.value(5.3) // predict by interpolating b/w bins 
+ * </pre>
+ * For arbitrary binning by any attribute of any object, you can use the built 
+ * in Groovy <code>groupBy</code> along with the {@link #bin} method:
+ * <pre> 
+ *      def objs = [
+ *          [ foo: 1, bar: 'cat'],
+ *          [ foo: 4, bar: 'tree'],
+ *          [ foo: 5, bar: 'tree'],
+ *          [ foo: 7, bar: 'house'],
+ *      ]
+ *      def binner = new Binner(3, 0, 10)
+ *      def bins = objs.groupBy {
+ *          binner.bin(it.foo)
+ *      }
+ *      assert bins[0].contains('cat')
+ * </pre>
+ * 
  * @author Simon Sadedin
  */
 class Binner {
