@@ -559,7 +559,7 @@ class Matrix extends Expando implements Iterable, Serializable {
      */
     @CompileStatic
     private void iterateRowsWithDelegate(Closure c, Closure operation) {
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -622,7 +622,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     public List<Number> findIndexValues(Closure<Boolean> c) {
         List<Integer> keepRows = []
         int rowIndex = 0;
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -734,7 +734,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         final int rows = matrix.rowDimension
         final int cols = matrix.columnDimension
         double[][] newData = new double[rows][cols]
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -756,7 +756,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         final int rows = matrix.rowDimension
         final int cols = matrix.columnDimension
         double[][] newData = new double[rows][cols]
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -846,7 +846,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         double[][] newData = new double[rows][cols]
         
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -879,7 +879,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     void eachRow(Closure c) {
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this,c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -931,7 +931,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     */
     
     Map<Object,Integer> countBy(Closure c) {
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         boolean withDelegate = !this.properties.isEmpty() || this.@names
         if(withDelegate) {
             c = (Closure)c.clone()
@@ -1395,13 +1395,23 @@ class Matrix extends Expando implements Iterable, Serializable {
         this.names = names*.toString()
     }
     
+    @CompileStatic
     Object getProperty(String name) {
+        getProperty(name,false)
+    }
+
+    @CompileStatic
+    Object getProperty(String name, boolean safe) {
         if(this.@names.contains(name)) {
             return this.col(this.@names.indexOf(name))
         }
         
        def result = super.getProperty(name)
        if(result == null) {
+           
+           if(safe) {
+               return null
+           }
 
            String suggestedColumns = ""
            if(this.@names) {
@@ -1476,7 +1486,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     Map<Object,Matrix> groupBy(Closure c) {
         List indices = (0..<this.rowDimension).collect { it }
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         Closure cloned = (Closure)c.clone()
         cloned.delegate = delegate
         def result = indices.groupBy { i ->
@@ -1497,17 +1507,20 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
     }
     
+    @CompileStatic
     Matrix applyViaIndices(Method method, Closure c) {
         List indices = (0..<this.rowDimension).collect { it }
-        IterationDelegate delegate = new IterationDelegate(this)
+        IterationDelegate delegate = new IterationDelegate(this, c)
         Closure cloned = (Closure)c.clone()
         cloned.delegate = delegate
-        def result = method.invoke(null, indices,{ i ->
-            delegate.row = i
+        def result = method.invoke(null, indices,{ int i ->
+            ((IterationDelegate)delegate).row = i
             return cloned(this.dataRef[i])
         })
         
-        double [][] submatrix = result instanceof Integer ? subsetRows([result]) : subsetRows(result)
+        double [][] submatrix = 
+            (double[][])(result instanceof Integer ? subsetRows(((List<Number>)[result])) : subsetRows((List<Number>)result))
+
         Matrix m = new Matrix(new Array2DRowRealMatrix(submatrix))
         m.@names = this.@names
         if(!this.properties.isEmpty()) 
@@ -1523,7 +1536,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     Matrix iterateWithDelegate(Method m, Closure c) {
-        IterationDelegate dg = new IterationDelegate(this)
+        IterationDelegate dg = new IterationDelegate(this,c)
         c = (Closure)c.clone()
         c.setDelegate(dg)
         int rowIndex = 0;

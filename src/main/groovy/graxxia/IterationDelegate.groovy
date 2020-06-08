@@ -19,8 +19,11 @@ class IterationDelegate {
     
 	Matrix host
     
-    IterationDelegate(Matrix host) {
+    Closure delegee
+    
+    IterationDelegate(Matrix host, Closure delegee) {
         this.host = host
+        this.delegee = delegee
     }
     
     @CompileStatic
@@ -30,7 +33,11 @@ class IterationDelegate {
     
     @CompileStatic
     Object resolve(String name) {
-		def column = host.getProperty(name)
+        
+        if(name == 'index')
+            return row
+
+		def column = host.getProperty(name, true)
 		if(column == null) {
 			if(name in host.@names) {
 				host.setProperty(name, host.col(host.@names.indexOf(name)))
@@ -38,6 +45,10 @@ class IterationDelegate {
 				column = host[name]
 			}
 		}
+        
+        if(column.is(null)) {
+            return delegee.owner.getAt(name)
+        }
         
         if(column instanceof MatrixColumn)
     		return ((MatrixColumn)column).getDoubleAt(row)
