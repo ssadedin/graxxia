@@ -1849,6 +1849,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         Matrix result = this.multiply(basis.transpose())
         result.@metadata.loadings = loading
         result.@metadata.basis =  basis
+        result.@names = (1..numComponents).collect { 'PC' + it }
         return result
     }
     
