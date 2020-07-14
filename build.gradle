@@ -92,7 +92,9 @@ task doc << {
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
+if (rootProject == project) {
+    wrapper {
+        gradleVersion = '5.2.1'
+    }
 }
 
