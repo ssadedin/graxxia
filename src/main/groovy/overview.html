@@ -1,0 +1,71 @@
+<p>Graxxia is a library adds data analysis features to Groovy, similar to languages such as R, Julia, etc, and also to libraries such as Pandas for Python.</p>
+<p>It should be emphasised that there is nearly nothing in Graxxia itself that is not just a wrapper around other existing libraries. For example Matrix support all comes from Apache commons-math, parsing of CSV and TSV (tab separated) files comes from OpenCSV and GroovyCSV, etc.</p>
+<p>What can you do with Graxxia? You can get just a few interesting things:</p>
+<ul>
+<li>An approximate equivalent to data frames in R</li>
+<li>Read and write tab separated data files</li>
+<li>Simple statistics computations</li>
+<li>A prototype (very alpha) imitation of the linear modelling expression syntax in R (y ~ x + z, etc)</li>
+</ul>
+<p>Obviously this is not even remotely comparable to what is available for data analysis in the other languages mentioned above. However these classes can make doing simple data analysis in Groovy quite powerful and in some cases compares very favorably to doing it in other languages. Combined with the Groovy Shell, it becomes quite useful for interactive data analysis.</p>
+<h1 id="quick-try-out">Quick Try Out</h1>
+<p>Graxxia is now available from Maven Central! That means you can use it without any download or compile via the <span class="citation" data-cites="Grab">@Grab</span> annotation. To give Graxxia a try, start a Groovy shell:</p>
+<h1 id="examples">Examples</h1>
+<p>The heart of Graxxia is the Matrix class. Start by importing the Graxxia classes:</p>
+<pre><code>groovy:000&gt; import graxxia.*</code></pre>
+<p>Now make a simple Matrix:</p>
+<pre><code>groovy:000&gt; m = [[2,3,4],[8,6,2],[10,4,3]] as Matrix
+===&gt; 3x3 Matrix:
+0:  2.0,    3.0,    4.0
+1:  8.0,    6.0,    2.0
+2:  10.0,   4.0,    3.0</code></pre>
+<p>So straight away you can see, there are some conversions between arrays, and lists of doubles that are built in for you. In general you can just take any 2 dimensional array / list combination and turn it into a Matrix. In fact, all Graxxia cares about is that they are Iterable, so you can even feed a Matrix dynamically if you like.</p>
+<p>We can access the elements, as you would expect, via indexing with row and column respectively:</p>
+<pre><code>groovy:000&gt; m[2][1]
+===&gt; 4.0</code></pre>
+<p>An important thing to point out here is that everything is using zero-based indexing, not 1-based.</p>
+<p>A whole row is accessed by omitting the second index:</p>
+<pre><code>groovy:000&gt; m[2] as String
+===&gt; [10.0, 4.0, 3.0]</code></pre>
+<p>A whole column is accessed by omitting the first index:</p>
+<pre><code>groovy:000&gt; m[][1]
+===&gt; [3.0,6.0,4.0]</code></pre>
+<p>Graxxia’s Matrix class returns a special MatrixColumn object for column access. You can treat it as a List<Double>, but it is actually working under the covers to reflect accessors back into the original Matrix from which the column came. That is, you are not looking at a copy of the data, you are looking at the actual data. No copy is made when you access by column, even thought the data is stored natively in row format.</p>
+<p>Like R’s data frames, Graxxia lets you give columns names:</p>
+<pre><code>groovy:000&gt; m.@names = [&quot;x&quot;,&quot;y&quot;,&quot;z&quot;]
+===&gt; [x, y, z]</code></pre>
+<p>We can now see these when we display the matrix:</p>
+<pre><code>groovy:000&gt; m
+===&gt; 3x3 Matrix:
+    x       y       z
+0:  2.0,    3.0,    4.0
+1:  8.0,    6.0,    2.0
+2:  10.0,   4.0,    3.0</code></pre>
+<p>Matrices are Expandos, a feature which allows you to add non-numeric columns to a Matrix:</p>
+<pre><code>groovy:000&gt; m.animal = [&quot;cat&quot;,&quot;dog&quot;,&quot;horse&quot;]
+===&gt; [cat, dog, horse]
+groovy:000&gt; m
+===&gt; 3x3 Matrix:
+      animal    x       y       z
+0:    cat     2.0,  3.0,    4.0
+1:    dog     8.0,  6.0,    2.0
+2:    horse   10.0, 4.0,    3.0</code></pre>
+<p>Matrices are Iterable objects, so they get all the normal Groovy magic methods that are available on Iterators. For example, we can ‘grep’ a Matrix in a useful way:</p>
+<pre><code>groovy:000&gt; m.grep { x &gt; 2 }.animal
+===&gt; [dog, horse]  </code></pre>
+<p>You can load and save matrices and they remember their column names:</p>
+<pre><code>m.save(&quot;test.tsv&quot;)
+n = Matrix.load(&quot;test.tsv&quot;)</code></pre>
+<p>Of course, matrix algebra itself works and all the scalar and matrix operators do what you (hopefully) expect:</p>
+<pre><code>groovy:000&gt; m = m + m
+===&gt; 3x3 Matrix:
+0:    4,    6,  8
+1:    16,   12, 4
+2:    20,   8,  6
+groovy:000&gt; m = m * 2
+===&gt; 3x3 Matrix:
+0:    8,    12, 16
+1:    32,   24, 8
+2:    40,   16, 12</code></pre>
+<p>The Stats class is a wrapper for the Commons-Math DescriptiveStatistics class. It will pull anything from an Iterable and give you back statistics about it, including rows and columns from a Matrix:</p>
+<pre><code>m.collect { Stats.from(it).mean }</code></pre>

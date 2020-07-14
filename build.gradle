@@ -81,15 +81,15 @@ jar {
 }
 
 groovydoc {
-    
-}
-
-task doc << {
-    groovydoc {
-        packageNames = ['']
-        destinationDir = new File('doc')
-        source = 'src/main/groovy'
+    destinationDir = new File('doc')
+    source = 'src/main/groovy'
+    overviewText = resources.text.fromFile('src/main/groovy/overview.html')
+    docTitle = 'Graxxia Documentation'
+    doLast {
+        println "Doing it now"
+        ant.copy file:"src/main/resources/docstyle.css", tofile:'doc/stylesheet.css', overwrite:true
     }
+
 }
 
 if (rootProject == project) {
