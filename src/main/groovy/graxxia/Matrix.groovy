@@ -18,7 +18,9 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector
 import org.apache.commons.math3.linear.SingularValueDecomposition
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 
@@ -444,6 +446,16 @@ class Matrix extends Expando implements Iterable, Serializable {
         matrix.getRow(n)
     }
     
+    @CompileStatic
+    RealVector rowVector(int n) {
+        matrix.getRowVector(n)
+    }
+    
+    @CompileStatic
+    RealVector columnVector(int n) {
+        matrix.getColumnVector(n)
+    }
+    
     /**
      * Implementation of the [] operator. Adds several different behaviors:
      * <ul>
@@ -474,8 +486,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             else {
                 double [][] submatrix = subsetRows(l)
                 Matrix result = new Matrix(new Array2DRowRealMatrix(submatrix))
-                result.@names = this.@names
-                result.@displayColumns = this.@displayColumns
+                result.inheritSettings(this)
                 if(!this.properties.isEmpty()) 
                     this.transferPropertiesToRows(result, l)
                 return result
@@ -492,6 +503,13 @@ class Matrix extends Expando implements Iterable, Serializable {
         else {
             throw new IllegalArgumentException("Cannot subset rows by type: " + n?.class?.name)
         }
+    }
+    
+    @CompileStatic
+    private void inheritSettings(final Matrix other) {
+        this.@names = other.@names
+        this.@displayColumns = other.@displayColumns
+        this.@displayRows = other.@displayRows
     }
     
     @CompileStatic
@@ -797,7 +815,8 @@ class Matrix extends Expando implements Iterable, Serializable {
             return rowResult
         }
         
-        result.@displayColumns = this.@displayColumns
+        result.inheritSettings(this)
+
         if(this.@names)
             this.transferPropertiesToRows(result)
  
@@ -821,7 +840,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
         }
         Matrix result = new Matrix(normalised)
-        result.@displayColumns = this.@displayColumns
+        result.inheritSettings(this)
         if(this.@names)
             this.transferPropertiesToRows(result)
             
@@ -874,6 +893,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(names && result.columnDimension == cols)
             result.names = names
         result.@displayColumns = this.@displayColumns
+        result.@displayRows = this.@displayRows
         return result
     }
     
@@ -1240,9 +1260,10 @@ class Matrix extends Expando implements Iterable, Serializable {
     int displayPrecision = 6
     
     int displayColumns = 50
+    int displayRows = DISPLAY_ROWS
        
     String toString() {
-        
+       
         List<Map.Entry<String,Iterable>> userColumns = this.properties.grep { it.value instanceof Iterable }
         
         def headerCells = this.@names
@@ -1299,7 +1320,7 @@ class Matrix extends Expando implements Iterable, Serializable {
            return ((rowCount++) + ":").padRight(rowNumWidth) + values.join(" ")  
         }
         
-        if(matrix.rowDimension<DISPLAY_ROWS) {
+        if(matrix.rowDimension<displayRows) {
             return "${matrix.rowDimension}x${matrix.columnDimension + this.properties.size()} Matrix:\n"+ 
                 headers + 
                 matrix.data.collect { row -> 
@@ -1307,14 +1328,14 @@ class Matrix extends Expando implements Iterable, Serializable {
             }.join("\n")
         }
         else {
-            int omitted = matrix.rowDimension-DISPLAY_ROWS
+            int omitted = matrix.rowDimension-displayRows
             String value = "${matrix.rowDimension}x${matrix.columnDimension + this.properties.size()} Matrix:\n"+ 
                 headers + 
-                matrix.data[0..DISPLAY_ROWS/2].collect(printRow).join("\n")  
+                matrix.data[0..displayRows/2].collect(printRow).join("\n")  
             rowCount += omitted -1    
             value +=
                 "\n... ${omitted} rows omitted ...\n" + 
-                matrix.data[-(DISPLAY_ROWS/2)..-1].collect(printRow).join("\n")
+                matrix.data[-(displayRows/2)..-1].collect(printRow).join("\n")
                 
             return value
         }
