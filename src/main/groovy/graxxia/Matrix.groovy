@@ -1350,7 +1350,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         format.maximumFractionDigits = 6
         
         int columnIndex = 0
-        String header = "| " + headerCells.collect { it.padRight(columnWidths[columnIndex++]) }.join(" | ") + "|"
+        String header = "| " + headerCells.collect { String.valueOf(it).padRight(columnWidths[columnIndex++]) }.join(" | ") + "|"
         w.println(header)
         columnIndex = 0
         w.println "|-" + headerCells.collect { "-" * Math.max(columnWidths[columnIndex++], it.size()) }.join("-|-") + "|"
