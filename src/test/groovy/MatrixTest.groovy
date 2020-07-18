@@ -1187,6 +1187,19 @@ class MatrixTest {
       assert df.ncols() == 4
       assert df.getString(2, 0) == "john"
    }
+   
+   @Test
+   void testRandomForest() {
+       
+       Matrix m = createRandomCorrelatedTestMatrix(50)
+       m.@names = ['A','B','C','D']
+       m.Y = m.collect { A <  0.3 ? 1 : 0 }
+
+       RandomForest rf = m.forest('Y', max_depth:2)
+       
+       println "Error = " + rf.error()
+       
+   }
   
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {

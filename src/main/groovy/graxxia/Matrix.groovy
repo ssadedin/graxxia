@@ -28,7 +28,9 @@ import com.xlson.groovycsv.PropertyMapper
 import groovy.transform.CompileStatic;
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import smile.classification.RandomForest
 import smile.data.DataFrame
+import smile.data.formula.Formula
 import smile.data.type.DataTypes
 import smile.data.vector.BaseVector
 import smile.data.vector.DoubleVector
@@ -1995,6 +1997,26 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         else
             throw new IllegalArgumentException("Column $columnName is not known in this matrix (candidate columns are: ${this.@names}, ${this.properties*.key.join(',')}")
+    }
+    
+    RandomForest forest(Map params = [:], String response) {
+       DataFrame df = this as DataFrame 
+       
+       List allColumns = [] 
+       if(this.getUserColumns())
+           allColumns.addAll(getUserColumns()*.key)
+       if(this.@names)
+           allColumns.addAll(this.@names)
+           
+       List predictors = allColumns.grep { it != response }
+       
+       Formula formula = Formula.of(response, *predictors)
+       
+       Map convertedParams = params.collect{ String k, Object v ->
+           ['smile.random.forest.' + k.replaceAll('_','.'), String.valueOf(v)]
+       }.collectEntries()
+
+       return RandomForest.fit(formula, df, new Properties(convertedParams))
     }
   
 //    @CompileStatic
