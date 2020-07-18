@@ -29,6 +29,12 @@ import com.xlson.groovycsv.PropertyMapper
 import groovy.transform.CompileStatic;
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import smile.data.DataFrame
+import smile.data.type.DataTypes
+import smile.data.vector.BaseVector
+import smile.data.vector.DoubleVector
+import smile.data.vector.IntVector
+import smile.data.vector.StringVector
 
 //import smile.data.Attribute
 //import smile.data.NumericAttribute
@@ -1264,7 +1270,7 @@ class Matrix extends Expando implements Iterable, Serializable {
        
     String toString() {
        
-        List<Map.Entry<String,Iterable>> userColumns = this.properties.grep { it.value instanceof Iterable }
+        List<Map.Entry> userColumns = getUserColumns()
         
         def headerCells = this.@names
         if(this.properties) {
@@ -1339,6 +1345,11 @@ class Matrix extends Expando implements Iterable, Serializable {
                 
             return value
         }
+    }
+
+    private List getUserColumns() {
+        List<Map.Entry<String,Iterable>> userColumns = this.properties.grep { it.value instanceof Iterable }
+        return userColumns
     }
     
     Writer toMarkdown(Writer w = null) {
@@ -1965,6 +1976,45 @@ class Matrix extends Expando implements Iterable, Serializable {
         return partitions
     }
     
+    BaseVector vector(String columnName) {
+        if(this.@names && (columnName in this.@names)) {
+            type = DataTypes.DoubleType
+            return DoubleVector.of(columnName, this.getAt(columnName) as double[])
+        }
+        else
+        if(columnName in this.userColumns*.key) {
+            
+            def values = this[columnName]
+            if(values[0] instanceof Double) 
+                return DoubleVector.of(columnName, this.getAt(columnName) as double[])
+            else
+            if(values[0] instanceof String) 
+                return StringVector.of(columnName, *values)
+            else
+            if(values[0] instanceof Integer)  
+                return IntVector.of(columnName, *values)
+            else
+                throw new IllegalArgumentException("Column $columnName of type ${values[0].class} is of an unsupported type to convert to vector")
+        }
+        else
+            throw new IllegalArgumentException("Column $columnName is not known in this matrix (candidate columns are: ${this.@names}, ${this.properties*.key.join(',')}")
+    }
+  
+//    @CompileStatic
+    Object asType(Class clazz) {
+        if(clazz == DataFrame) {
+            List userVectors = this.getUserColumns()*.key.collect { String colName -> vector(colName) } 
+            List colNames = this.@names ? this.@names : (1..this.columnDimension).collect { "C$it" }
+            DataFrame matrixDataFrame = DataFrame.of(this.getDataRef(), *colNames)
+            if(userVectors) {
+                return DataFrame.of(*userVectors).merge(matrixDataFrame)
+            }
+            else {
+                return matrixDataFrame
+            }
+        }
+    }
+   
     /**
      * Return smile attributes for this matrix
      * @return

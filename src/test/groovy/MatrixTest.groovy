@@ -1,14 +1,11 @@
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import graxxia.*
-import groovy.time.TimeCategory;
-import groovy.transform.CompileStatic
 import smile.classification.RandomForest
 import smile.data.DataFrame
-//import smile.data.AttributeDataset
 import smile.data.formula.Formula
+import smile.data.type.StructField
+import smile.data.type.StructType
 
 class MatrixTest {
 
@@ -1126,6 +1123,70 @@ class MatrixTest {
       assert m5[]['bar','foo'][0] == [5,1]
 
   }
+  
+  @Test
+  void testCollectWithIndex() {
+      def m = new Matrix(x1: [1,2,3,4,5], x2: [2,4,6,8,10], x3:[7,6,5,4,3])
+        
+//      def result = m.collect { x1 * x2 } 
+//      
+//      assert result == [2.0d,  8.0d, 18.0d, 32.0d, 50.0d]
+//      
+      int cat = 3
+      
+      println m.@names
+      
+      def index_result = m.collect { index * x1  * cat }
+  }
+  
+  @Test
+  void testVector() {
+      Matrix m = new Matrix([a: [1,2,3,4], b:[5,6,7,8]])
+      m.person = ['fred','sam','john','sue']
+      m.age = [ 30i, 20i, 46i, 92i]
+      
+      println m
+      
+      def v1 = m.vector('a')
+      
+      assert v1.name() == 'a'
+      assert v1.size() == 4
+      assert v1.get(0) == 1d
+      
+      def v2 = m.vector('person')
+      assert v2.name() == 'person'
+      
+      def v3 = m.vector('age')
+      assert v3.name() == 'age'
+      assert v3.getInt(3) == 92
+      
+//      DataFrame df = DataFrame.of(m.vector('a'), m.vector('person'))
+//      
+//      println df
+  }
+  
+  @Test
+  void testDataFrame() {
+      Matrix m = new Matrix([a: [1,2,3,4], b:[5,6,7,8]])
+      
+      DataFrame df = m as DataFrame
+      
+      println df
+      
+      assert df.size() == 4
+      assert df.ncols() == 2
+      
+      
+      m.person = ['fred','sam','john','sue']
+      m.age = [ 30i, 20i, 46i, 92i]
+       
+      df = m as DataFrame
+      
+      println df
+      assert df.size() == 4
+      assert df.ncols() == 4
+      assert df.getString(0, 2) == "john"
+   }
   
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
