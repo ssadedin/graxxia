@@ -18,7 +18,6 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
-import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector
 import org.apache.commons.math3.linear.SingularValueDecomposition
@@ -956,22 +955,21 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     */
     
+    @CompileStatic
     Map<Object,Integer> countBy(Closure c) {
-        IterationDelegate delegate = new IterationDelegate(this, c)
-        boolean withDelegate = !this.properties.isEmpty() || this.@names
-        if(withDelegate) {
-            c = (Closure)c.clone()
-            c.setDelegate(delegate)
-        }
-        int rowIndex = 0;
+       
+        Map<Object, Integer> result = [:]
         
-        List myNames = this.@names
-        
-        matrix.dataRef.countBy {
-            if(withDelegate)
-                delegate.row = rowIndex++
-            c(it)
+        this.iterateRowsWithDelegate(c) { int index, double [] row, rowResult ->
+            Integer value = result.get(rowResult)
+            if(value.is(null)) {
+                result.put(rowResult, 1)
+            }
+            else {
+                result.put(rowResult, value+1)
+            }
         }
+        return result
     }
   
     
