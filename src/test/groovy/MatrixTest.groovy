@@ -1185,7 +1185,7 @@ class MatrixTest {
       println df
       assert df.size() == 4
       assert df.ncols() == 4
-      assert df.getString(0, 2) == "john"
+      assert df.getString(2, 0) == "john"
    }
   
     

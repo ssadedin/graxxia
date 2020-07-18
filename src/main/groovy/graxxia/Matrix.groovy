@@ -1978,7 +1978,6 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     BaseVector vector(String columnName) {
         if(this.@names && (columnName in this.@names)) {
-            type = DataTypes.DoubleType
             return DoubleVector.of(columnName, this.getAt(columnName) as double[])
         }
         else
