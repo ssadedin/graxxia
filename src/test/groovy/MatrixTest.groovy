@@ -1198,7 +1198,16 @@ class MatrixTest {
        RandomForest rf = m.forest('Y', max_depth:2)
        
        println "Error = " + rf.error()
-       
+   }
+   
+   @Test
+   void testRangeToEnd() {
+      Matrix m = new Matrix(a: [1,2,3,4], b:[5,6,7,8])
+      
+      Matrix sub = m[1..-1]
+      
+      assert sub.a[0] == 2
+      assert sub.rowDimension == 3
    }
   
     

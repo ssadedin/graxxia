@@ -486,6 +486,30 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(n instanceof Number)
             return matrix.dataRef[(int)n]
         else
+        if(n instanceof IntRange) {
+            int from = n.from
+            int to = n.to
+            
+            if(n.reverse) {
+                from = n.to
+                to = n.from
+            }
+            
+            if(from<0)
+                from = this.rowDimension + from 
+            if(to<0)
+                to = this.rowDimension + to 
+                
+            List l = from..to
+
+            double [][] submatrix = subsetRows((List<Number>)l)
+            Matrix result = new Matrix(new Array2DRowRealMatrix(submatrix))
+            result.inheritSettings(this)
+            if(!this.properties.isEmpty()) 
+                this.transferPropertiesToRows(result, (List<Number>)l)
+            return result
+        }
+        else
         if(n instanceof List) {
             List<Number> l = (List)n
             if(l.size() == 0) // Seems to happen with m[][2] type syntax
