@@ -490,7 +490,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             int from = n.from
             int to = n.to
             
-            if(n.reverse) {
+            if(n.reverse && n.from<0) {
                 from = n.to
                 to = n.from
             }
