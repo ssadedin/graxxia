@@ -316,6 +316,31 @@ class TSV implements Iterable<PropertyMapper> {
             [ columnNames, row.values ].transpose().collectEntries() 
         }
     }
+    
+    /**
+     * Convenience method to save a TSV as a file
+     * @param listMap
+     */
+    @CompileStatic
+    static void save(List<Map<String,Object>> listMap, Writer w) {
+        save(listMap, w, '\t')
+    }
+
+    /**
+     * Convenience method to save a TSV as a file
+     * @param listMap
+     */
+    @CompileStatic
+    static void save(final List<Map<String,Object>> listMap, final Writer w, final String sep) {
+        w.withWriter {
+            w.write(listMap[0]*.key.join('\t'))
+            w.write('\n')
+            for(Map<String,Object> line in listMap) {
+                w.write(line*.value.join('\t'))
+                w.write('\n')
+            }
+        }
+    }
 }
 
 class CSV extends TSV {
