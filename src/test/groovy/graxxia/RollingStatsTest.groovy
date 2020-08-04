@@ -1,7 +1,9 @@
 package graxxia
 
 import static org.junit.Assert.*
-import static Math.abs
+
+
+import static java.lang.Math.abs
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.junit.Test
