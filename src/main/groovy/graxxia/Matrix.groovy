@@ -137,7 +137,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     /**
      * How many rows are displayed in toString() and other calls that format output
      */
-    static final int DISPLAY_ROWS = 50
+    static final int DISPLAY_ROWS = 20
     
     @Delegate
     Array2DRowRealMatrix matrix
