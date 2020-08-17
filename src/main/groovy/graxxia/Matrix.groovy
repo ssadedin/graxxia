@@ -778,12 +778,11 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(c.maximumNumberOfParameters == 3) {
             result = transformWithIndices(c)
         }
-        if(names)
-            result.names = this.names
-            
         if(!this.properties.isEmpty()) 
             this.transferPropertiesToRows(result)
             
+        result.inheritSettings(this)
+
         return result
     }
     
