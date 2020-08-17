@@ -113,7 +113,17 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
             leftShift(line);
         }
     }
+    
+    @CompileStatic
+    public IntegerStats(int maxPercentileValue, double [] sourceValues) {
+        values = new int[maxPercentileValue];
+        for(Object obj : sourceValues) {
+            this.leftShift(obj);
+        }
+    }
+ 
      
+    @CompileStatic
     public IntegerStats(int maxPercentileValue, Iterable sourceValues) {
         values = new int[maxPercentileValue];
         for(Object obj : sourceValues) {
@@ -121,6 +131,7 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
         }
     }
     
+    @CompileStatic
     void leftShift(Object obj) {
         if(obj instanceof Integer) {
             addValue((Integer)obj);
