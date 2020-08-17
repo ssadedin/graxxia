@@ -33,6 +33,7 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.data.type.DataTypes
 import smile.data.vector.BaseVector
+import smile.data.vector.BooleanVector
 import smile.data.vector.DoubleVector
 import smile.data.vector.IntVector
 import smile.data.vector.StringVector
@@ -2019,6 +2020,12 @@ class Matrix extends Expando implements Iterable, Serializable {
         return partitions
     }
     
+    /**
+     * Return the given column as a Smile Vector
+     * 
+     * @param columnName    Column to convert to vector
+     * @return  Smile Vector 
+     */
     BaseVector vector(String columnName) {
         if(this.@names && (columnName in this.@names)) {
             return DoubleVector.of(columnName, this.getAt(columnName) as double[])
@@ -2035,6 +2042,9 @@ class Matrix extends Expando implements Iterable, Serializable {
             else
             if(values[0] instanceof Integer)  
                 return IntVector.of(columnName, *values)
+            else
+            if(values[0] instanceof Boolean)  
+                return BooleanVector.of(columnName, *values)
             else
                 throw new IllegalArgumentException("Column $columnName of type ${values[0].class} is of an unsupported type to convert to vector")
         }
