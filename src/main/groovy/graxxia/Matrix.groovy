@@ -438,6 +438,15 @@ class Matrix extends Expando implements Iterable, Serializable {
         new MatrixColumn(columnIndex:n, sourceMatrix: this, name: names[n])
     }
     
+    @CompileStatic
+    MatrixColumn col(String columnName) {
+        int n = this.@names.indexOf(columnName)
+        if(n<0)
+            throw new IllegalArgumentException("Column $columnName not found in this matrix")
+        new MatrixColumn(columnIndex:n, sourceMatrix: this, name: names[n])
+    }
+ 
+    
     List<MatrixColumn> getColumns(List<String> names) {
         new MatrixColumnList(columns:names.collect { this.names.indexOf(it) }.collect { int index ->
              assert index >= 0; col(index) 
