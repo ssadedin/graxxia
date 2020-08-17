@@ -1833,6 +1833,17 @@ class Matrix extends Expando implements Iterable, Serializable {
     /**
      * Concat the given matrices "vertically" (ie: stacking their rows)
      * 
+     * @param matrices
+     * @return
+     */
+    @CompileStatic
+    static Matrix concat(Matrix... matrices) {
+        concat(matrices as List)
+    }
+
+    /**
+     * Concat the given matrices "vertically" (ie: stacking their rows)
+     * 
      * @param matrixIter
      * @return
      */
