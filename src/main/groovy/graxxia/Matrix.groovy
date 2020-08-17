@@ -2052,6 +2052,16 @@ class Matrix extends Expando implements Iterable, Serializable {
             throw new IllegalArgumentException("Column $columnName is not known in this matrix (candidate columns are: ${this.@names}, ${this.properties*.key.join(',')}")
     }
     
+    /**
+     * Fit a random forest on the the data in this matrix wiht the given column name 
+     * as the response and all other columns as predictors.
+     * 
+     * @param params    named parameter arguments, eg: max_depth, max_nodes (see Smile 
+     *                  <a href='https://github.com/haifengl/smile/blob/master/core/src/main/java/smile/classification/RandomForest.java#L182'>RandomForest docs</a> 
+     *                  for valid values)
+     * @param response  String value specifying the name of the column to treat as the response
+     * @return  RandomForest, fitted to data
+     */
     RandomForest forest(Map params = [:], String response) {
        DataFrame df = this as DataFrame 
        
