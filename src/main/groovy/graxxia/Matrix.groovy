@@ -1612,6 +1612,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         })
         
         Matrix matrixResult
+        if(result.is(null)) {
+            return null
+        }
+        else
         if(result instanceof Matrix) {
             matrixResult = (Matrix)result
         }
@@ -1628,7 +1632,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             matrixResult = new Matrix(result)
         }
         else 
-            throw new Exception("Unexpected argument type from max: " + result.getClass().name)
+            throw new Exception("Unexpected argument result type from Matrix iteration: " + result?.getClass()?.name)
         
         if(matrixResult.columnDimension == this.@names?.size())
             matrixResult.@names = this.@names
