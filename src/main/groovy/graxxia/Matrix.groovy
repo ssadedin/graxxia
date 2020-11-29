@@ -596,7 +596,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
 
     @CompileStatic
-    private List<Integer> convertIndices(Iterable i) {
+    private List<Integer> convertIndices(Iterable<Number> i) {
         List<Integer> indices = new ArrayList(this.matrix.rowDimension)
         for(Number n : i) {
             indices.add(n.toInteger())
@@ -1732,7 +1732,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     Iterator<Map> listMapIterator() {
-        new Iterator() {
+        new Iterator<Map>() {
             
             int i = -1;
             
@@ -1873,7 +1873,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     @CompileStatic
     Iterator<SubMatrix> window(int offset, int rows) {
-       new Iterator() {
+       new Iterator<SubMatrix>() {
            
            int windowStart = offset
            int i=offset + rows
