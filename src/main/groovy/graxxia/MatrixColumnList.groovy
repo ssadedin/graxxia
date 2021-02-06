@@ -15,6 +15,9 @@ class MatrixColumnList {
     Object getAt(List arg) {
         if(arg[0] instanceof Number) {
             List<MatrixColumn> cols = columns[arg]
+            final int oob = cols.findIndexOf { it.is(null) }
+            if(oob>=0)
+                throw new IllegalArgumentException("Column $oob is out of bounds. Matrix has ${columns.size()} columns")
             return new Matrix(cols as MatrixColumn[])
         }
         else

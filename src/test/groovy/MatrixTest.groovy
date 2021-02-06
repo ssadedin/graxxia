@@ -1,3 +1,5 @@
+import static org.junit.Assert.assertThrows
+
 import org.junit.Test;
 
 import graxxia.*
@@ -781,6 +783,33 @@ class MatrixTest {
        println small
     }
     
+    @Test
+    void subsetColumnsNonContig() {
+        Matrix m = new Matrix([
+            1..100,
+            201..300
+        ])
+        
+       Matrix small = m[][[3,5,8,57]]
+       
+       assert small.columnDimension == 4
+       assert small.rowDimension == 2
+       
+       println small
+    }
+    
+    @Test
+    void subsetColumnsOOB() {
+        Matrix m = new Matrix([
+            1..100,
+            201..300
+        ])
+        
+       assertThrows(IllegalArgumentException) {
+           Matrix small = m[][[3,604,8,10]]
+        }
+    }
+     
     @Test
     void initFromColumnArray() {
         Matrix foo = new Matrix(
