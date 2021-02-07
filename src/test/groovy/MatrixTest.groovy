@@ -73,7 +73,7 @@ class MatrixTest {
         assert m[][2][3] == 6d
     }
     
-    @Test
+//    @Test
     void bigMatrix() {
         Matrix m = new Matrix(60,2)
         for(int i=0; i<m.rowDimension;++i) {
