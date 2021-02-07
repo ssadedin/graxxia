@@ -9,7 +9,15 @@ class MatrixColumnList {
     ArrayList<MatrixColumn> columns
     
     Object getAt(String arg) {
-        return new Matrix([columns.find { it.name == arg }] as MatrixColumn[])
+        def col = columns.find { it.name == arg }
+        if(col.is(null)) {
+            def msg = "Column $arg was not found in matrix. Valid columns include: ${columns.take(20)*.name.join(', ')}"
+            if(this.columns.size()>20) {
+                msg = msg + " ... (${this.columns.size() - 20} more)"
+            }
+            throw new IllegalArgumentException(msg)
+        }
+        return new Matrix([col] as MatrixColumn[])
     }
 
     Object getAt(List arg) {

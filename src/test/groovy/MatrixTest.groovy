@@ -1252,6 +1252,28 @@ class MatrixTest {
       assert m.findIndexOf { b == 8 } == 3
       
    }
+   
+   @Test
+   void testCorrectErrorIfUnknownColumn() {
+      Matrix m = new Matrix(a: [1,2,3,4], b:[5,6,7,8])
+      
+      assertThrows(IllegalArgumentException) {
+          def c = m[]['x']
+      }
+   }
+   
+   @Test
+   void testSortWithNonMatrixColumn() {
+       
+      Matrix m = new Matrix(a: [10,2,3,4], b:[5,6,7,8])
+      m.foo = ['ten','two','three','four']
+
+      def sorted = m.sort { a }
+      
+      println sorted
+      
+      assert sorted.foo == ['two','three','four','ten']
+   }
   
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {

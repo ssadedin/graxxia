@@ -1632,7 +1632,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         Matrix m = new Matrix(new Array2DRowRealMatrix(submatrix))
         m.@names = this.@names
         if(!this.properties.isEmpty()) 
-            this.transferPropertiesToRows(m)        
+            this.transferPropertiesToRows(m, (List<Number>)indices)        
         
         return m
     }
