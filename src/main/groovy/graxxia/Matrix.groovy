@@ -833,6 +833,9 @@ class Matrix extends Expando implements Iterable, Serializable {
         return new Matrix(new Array2DRowRealMatrix(newData, false))
     }
     
+    /**
+     * @return a {@link Matrix} where each row has been divided by its mean value
+     */
     @CompileStatic
     Matrix normaliseRows() {
         
@@ -863,6 +866,9 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     }
     
+    /**
+     * @return a {@link Matrix} where each column has been divided by its mean value
+     */
     @CompileStatic
     Matrix normaliseColumns() {
         
@@ -1806,6 +1812,11 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
 
     
+    /**
+     * Calculate pairwise correlation between all rows and columns in the matrix
+     * 
+     * @return
+     */
     @CompileStatic
     Matrix getRowCorrelations() {
         
