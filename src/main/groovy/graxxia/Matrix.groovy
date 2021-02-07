@@ -41,6 +41,12 @@ import smile.data.vector.StringVector
 //import smile.data.Attribute
 //import smile.data.NumericAttribute
 
+
+@CompileStatic
+@Singleton
+class StopIteration {
+}
+
 /**
  * Wraps an Apache-Commons-Math matrix of double values and enhances
  * it with support for non-matrix columns to create an experience 
@@ -611,7 +617,9 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     /**
      * Execute the given closure <code>c</code> for each row in the Matrix
-     * and then pass the result to the given operation to transform the result
+     * and then pass the result to the given operation to transform the result.
+     * If the operation returns an instance of {@link StopIteration} the 
+     * iteration is aborted.
      * 
      * @param c
      * @param operation
@@ -631,7 +639,9 @@ class Matrix extends Expando implements Iterable, Serializable {
                 if(withDelegate)
                     delegate.row = rowIndex
                 Object rowResult = c(row)
-                operation(rowIndex, row, rowResult)
+                def result = operation(rowIndex, row, rowResult)
+                if(result instanceof StopIteration)
+                    break
                 ++rowIndex
             }
         }
@@ -641,7 +651,9 @@ class Matrix extends Expando implements Iterable, Serializable {
                 if(withDelegate)
                     delegate.row = rowIndex
                 Object rowResult = c(row)
-                operation(rowIndex, row, rowResult)
+                def result = operation(rowIndex, row, rowResult)
+                if(result instanceof StopIteration)
+                    break
                 ++rowIndex
             }
         }
@@ -676,6 +688,24 @@ class Matrix extends Expando implements Iterable, Serializable {
         }
         return results
     }    
+    
+    /**
+     * Find the index of the first row in the matrix satisfying the given closure
+     * 
+     * @param c
+     * @return
+     */
+    @CompileStatic
+    int findIndexOf(Closure<Boolean> c) {
+        int result = -1
+        this.iterateRowsWithDelegate(c) { int index, double [] row, Object rowResult ->
+            if(rowResult) {
+                result = index
+                return StopIteration.instance
+            }
+        }
+        return result
+    }
    
     @CompileStatic
     public List<Number> findIndexValues(Closure<Boolean> c) {

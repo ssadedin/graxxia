@@ -1238,6 +1238,20 @@ class MatrixTest {
       assert sub.a[0] == 2
       assert sub.rowDimension == 3
    }
+   
+   @Test
+   void testFindIndexOf() {
+      Matrix m = new Matrix(a: [1,2,3,4], b:[5,6,7,8])
+      
+      int result = m.findIndexOf { a == 3 }
+      
+      assert result == 2
+      
+      assert m.findIndexOf { b == 5 } == 0
+
+      assert m.findIndexOf { b == 8 } == 3
+      
+   }
   
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
