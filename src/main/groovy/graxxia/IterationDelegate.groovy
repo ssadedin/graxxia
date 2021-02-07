@@ -12,6 +12,15 @@ package graxxia
 
 import groovy.transform.CompileStatic
 
+/**
+ * Provides access to "special" variables during {@link Matrix} iteration methods
+ * such as:
+ * 
+ * <li>access to values by column name for non-matrix columns
+ * <li>access to row index as 'index'
+ * 
+ * @author Simon Sadedin
+ */
 @CompileStatic
 class IterationDelegate {
     
