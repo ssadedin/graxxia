@@ -729,6 +729,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         result.@names = this.@names
         if(!this.properties.isEmpty()) 
             this.transferPropertiesToRows(result, keepRows)
+        result.copyDisplaySettingsFrom(this)
         return result
     }    
     
@@ -755,6 +756,12 @@ class Matrix extends Expando implements Iterable, Serializable {
                 result[key] = value as List
             }
         }
+    }
+    
+    @CompileStatic
+    void copyDisplaySettingsFrom(final Matrix other) {
+        this.@displayColumns = other.@displayColumns
+        this.@displayRows = other.@displayRows 
     }
     
     /**
@@ -1832,7 +1839,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             return vals
         } as Matrix
         
-        return subset_cov.transform { double x, int i, int j ->
+        Matrix result = subset_cov.transform { double x, int i, int j ->
            if(j>i) {
                ((double[])(subset_cov[j]))[i]
            }
@@ -1844,6 +1851,9 @@ class Matrix extends Expando implements Iterable, Serializable {
                x
            }
        }
+       this.transferPropertiesToRows(result)
+       result.copyDisplaySettingsFrom(this)
+       return result
     }
     
     /**
