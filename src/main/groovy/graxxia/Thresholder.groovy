@@ -1,5 +1,7 @@
 package graxxia
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics
+
 import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -14,7 +16,7 @@ enum ThresholdState {
 @CompileStatic
 class ThresholdRange extends IntRange {
     
-    public ThresholdRange(int from, int to, Object value, Stats stats, int maxIndex, int minIndex) {
+    public ThresholdRange(int from, int to, Object value, SummaryStatistics stats, int maxIndex, int minIndex) {
         super(from, to);
         this.value = value;
         this.stats = stats;
@@ -22,7 +24,7 @@ class ThresholdRange extends IntRange {
         this.minIndex = minIndex;
     }
     Object value
-    Stats stats
+    SummaryStatistics stats
     
     /**
      * The position of the maximum value during this range's activation
@@ -84,6 +86,8 @@ class Thresholder<T> extends Expando {
     
     private List<ThresholdRange> ranges = []
     
+    boolean trackStatistics = true
+    
     int start = 0
     
     int index
@@ -95,11 +99,14 @@ class Thresholder<T> extends Expando {
      */
     int maxIndex
     int minIndex
-    Stats stats = null
+    double currentMax = Double.MIN_VALUE
+    double currentMin = Double.MAX_VALUE
+    
+    SummaryStatistics stats = null
     
     Boolean twoArg = null
     
-    Thresholder threshold(@ClosureParams(value=SimpleType,options='double') Closure<Object> c) {
+    Thresholder threshold(@ClosureParams(value=SimpleType,options='double') Closure c) {
         this.condition = c
         return this
     }
@@ -108,7 +115,6 @@ class Thresholder<T> extends Expando {
         this.conditionInterface = c
         return this
     }
-    
     
     Thresholder initWith(@ClosureParams(value=SimpleType, options=['double','Object']) Closure c) {
         this.init = c
@@ -120,7 +126,7 @@ class Thresholder<T> extends Expando {
         return this
     }
      
-    Thresholder andThen(Closure<ThresholdRange> c) {
+    Thresholder andThen(Closure c) {
         this.emit = c
         return this
     }
@@ -166,7 +172,11 @@ class Thresholder<T> extends Expando {
             if(state == ThresholdState.INACTIVE) {
                 start = index
                 state = ThresholdState.ACTIVE
-                stats = new Stats()
+                stats = trackStatistics ? new SummaryStatistics() : null
+                
+                currentMax = Double.MIN_VALUE
+                currentMin = Double.MAX_VALUE
+                
                 minIndex = index
                 maxIndex = index
                 if(!init.is(null)) {
@@ -181,13 +191,19 @@ class Thresholder<T> extends Expando {
                 this.updater.call(this.activeValue, value)
             }
                 
-            if(value instanceof Number) {
+            if(trackStatistics && value instanceof Number) {
                 Number numericValue = (Number) value
-                if(numericValue > stats.max)
+                if(numericValue > currentMax) {
                     maxIndex = index
-                if(numericValue < stats.min)
+                    currentMax = (double)numericValue
+                }
+                if(numericValue < currentMin) {
                     minIndex = index
-                stats << value
+                    currentMin = (double)numericValue
+                }
+
+                if(trackStatistics)
+                    stats.addValue((double)value)
             }
                 
         }
