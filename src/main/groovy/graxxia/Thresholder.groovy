@@ -126,7 +126,7 @@ class Thresholder<T> extends Expando {
         return this
     }
      
-    Thresholder andThen(Closure c) {
+    Thresholder andThen(@ClosureParams(value=SimpleType, options=['graxxia.ThresholdRange']) Closure c) {
         this.emit = c
         return this
     }
