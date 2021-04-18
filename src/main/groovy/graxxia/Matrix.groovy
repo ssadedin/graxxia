@@ -1207,20 +1207,23 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         List nonMatrixCols = (List)this.properties*.key 
         
+        // NOTE: the this.properties.names seems to be required because of a 
+        // weird bug where groovy will prefer to set an expando property rather than
+        // set the real property on this object
         List matrixCols = this.@names
         if(!matrixCols && this.properties.containsKey('names'))
             matrixCols = (List)this.properties.names
             
-        
+        if(!nonMatrixCols.isEmpty() && matrixCols.isEmpty())
+            matrixCols = (1..this.columnDimension).collect { 'C' + it }
+
         List columnNames = (List)this.properties*.key 
         columnNames.addAll(matrixCols)
         
-        // NOTE: the this.properties.names seems to be required because of a 
-        // weird bug where groovy will prefer to set an expando property rather than
-        // set the real property on this object
         if(columnNames) {
-            if(!options.r)
-            w.print "# "
+            if(!options.r) {
+                w.print "# "
+            }
             w.println columnNames.join("\t")   
         }
         

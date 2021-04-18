@@ -1275,6 +1275,49 @@ class MatrixTest {
       assert sorted.foo == ['two','three','four','ten']
    }
   
+   @Test
+   void readWithNakedColumnsInFirstLine() {
+       
+       String text = '''
+       Hello\tWorld
+       cow\t3
+       dog\t6
+       '''[1..-1].stripIndent()
+       
+       println "Text is: \n$text"
+       
+//       def m = Matrix.load(new StringReader(text))
+       def m = Matrix.load('/Users/simon.sadedin/work/Genetale/hg38_mpc_edited.20k.txt.gz')
+       
+       println m.properties*.key
+       
+   }
+   
+   @Test
+   void 'save with nonmatrix columns but no names for matrix cols'() {
+       // In this case we should fill in the matrix cols with names
+       // otherwise the file ends up with a header that has the wrong
+       // number of columns
+       StringWriter sw = new StringWriter()
+
+       def m = new Matrix([
+           [1,2,3,4,5], 
+           [2,4,6,8,10], 
+           [7,6,5,4,3],
+       ])
+           
+      m.foo = ['A','B','C']
+
+//      println(m)
+      
+      m.save(sw, r:true)
+      
+      def result = sw.toString()
+      def headers = result.readLines()[0].tokenize('\t')
+      assert headers.size() == 6
+      
+      assert headers[0] == 'foo'
+   }
     
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
