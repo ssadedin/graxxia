@@ -46,6 +46,16 @@ class StatsTest {
     }
     
     @Test
+    void testFromMatrix() {
+        double [][] x = [
+            [0, 2, 4],
+            [1, 3, 5],
+        ] as double[][]
+        
+        assert Stats.from(x).mean == 1.5
+    }
+    
+    @Test
     void testIterable() {
         Iterable x = new Iterable() {
             int count = 0

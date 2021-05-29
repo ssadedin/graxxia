@@ -71,6 +71,35 @@ class Stats extends DescriptiveStatistics implements Serializable {
         from(values,null)    
     }
     
+    @CompileStatic
+    static Stats from(Matrix m, Closure c = null) {
+        from((double[][])m.rawData, c)
+    }
+
+    @CompileStatic
+    static Stats from(double [][] values, Closure c = null) {
+        Stats s = new Stats()
+        boolean withIndex = (c != null) && c.maximumNumberOfParameters > 2
+        for(int i=0; i<values.size();++i) {
+            for(int j=0; j<values.size(); ++j) {
+                double value = values[i][j];
+                if(c == null) {
+                    s.addValue(value)
+                }
+                else {
+                    def result = withIndex ? c(value, i,j) : c(value)
+                    if(result != false) {
+                        if(result == true)
+                            s.addValue((double)value)
+                        else
+                            s.addValue(((Number)result).toDouble())
+                    }
+                }
+            }
+        }
+        return s
+    }
+
     /**
      * A concrete implementation of {@link #from(Iterable, Closure)} specialised
      * for arrays of double[] values. 

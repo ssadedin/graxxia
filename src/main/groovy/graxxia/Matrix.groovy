@@ -2142,6 +2142,15 @@ class Matrix extends Expando implements Iterable, Serializable {
 
        return RandomForest.fit(formula, df, new Properties(convertedParams))
     }
+    
+    /**
+     * Same as dataRef property but works around some contexts where that property
+     * is not visible because it is implicitly resolved as groovy delegate
+     */
+    @CompileStatic
+    double [][] getRawData() {
+        return this.matrix.dataRef
+    }
   
 //    @CompileStatic
     Object asType(Class clazz) {
