@@ -1988,7 +1988,10 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     @CompileStatic
-    Matrix reshape(final int rows, final int cols) {
+    Matrix reshape(final int rows, final int outputCols = -1) {
+        
+        final int cols = outputCols > 0 ? outputCols : (int)((columnDimension * rowDimension) / rows)
+        
         final double [][] newData = new double[rows][cols]
         final int oldCols = this.getColumnDimension()
         int newRow = -1
