@@ -1921,7 +1921,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         matrices[0].properties.each {  key, value ->
             result.setProperty((String)key, matrices*.getProperty((String)key).sum())
         }
-
+        
+        result.copyDisplaySettingsFrom(matrices[0])
+        if(matrices[0].@names)
+            result.@names = matrices[0].@names
         return result
     }
     
