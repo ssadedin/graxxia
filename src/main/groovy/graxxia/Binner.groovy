@@ -64,22 +64,39 @@ class Binner {
     
     double binSize
     
+    private double halfBinSize
+    
     public Binner(int binCount, double min, double max) {
         super();
         this.binCount = binCount;
         this.min = min;
         this.max = max;
         this.binSize = (max - min) / binCount
+        this.halfBinSize = binSize/2
     }
     
+    /**
+     * @return the index of the bin for the value x
+     */
     @CompileStatic
     final int bin(final Number x) {
         (x - min) / binSize
     }
 
+    /**
+     * @return the index of the bin for the value x
+     */
     @CompileStatic
     final int bin(final double x) {
         (x - min) / binSize
+    }
+    
+    /**
+     * @return the midpoint value of the bin, specified by its index
+     */
+    @CompileStatic
+    final double value(final int bin) {
+        this.min + binSize*bin + halfBinSize
     }
     
     @CompileStatic
