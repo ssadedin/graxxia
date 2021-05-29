@@ -1526,7 +1526,7 @@ class Matrix extends Expando implements Iterable, Serializable {
 
            String suggestedColumns = ""
            if(this.@names) {
-               suggestedColumns = ". Valid columns are: " + this.@names.join(', ')
+               suggestedColumns = ". Valid columns include: " + this.@names.take(20).join(', ')
            }
            throw new IllegalArgumentException("No column named $name or matching property in this Matrix$suggestedColumns")
        }
