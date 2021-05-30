@@ -26,7 +26,9 @@ class MatrixColumnList {
             final int oob = cols.findIndexOf { it.is(null) }
             if(oob>=0)
                 throw new IllegalArgumentException("Column ${arg[oob]} is out of bounds. Matrix has ${columns.size()} columns")
-            return new Matrix(cols as MatrixColumn[])
+            Matrix result = new Matrix(cols as MatrixColumn[])
+            columns[0].sourceMatrix.transferPropertiesToRows(result)
+            return result
         }
         else
         if(arg[0] instanceof String) {
@@ -36,12 +38,19 @@ class MatrixColumnList {
         throw new IllegalArgumentException("Expected list of strings as column names or integers as column indices")
     }
 
+    /**
+     * Implement selection of a range of columns
+     * <p>
+     * note: this method preserves non-matrix columns since subsetting by range implicitly includes only the
+     * matrix columns
+     */
     Object getAt(Range arg) {
         int colIndex = 0
         List<String> names = (List<String>)columns[arg]*.name.collect { n -> ++colIndex; n == null ? colIndex.toString() : n }
         List<MatrixColumn> cols = columns[arg]
         Map columnMap = [ names, cols ].transpose().collectEntries()
         def result =  new Matrix(columnMap)
+        columns[0].sourceMatrix.transferPropertiesToRows(result)
         return result
     } 
 }

@@ -784,6 +784,33 @@ class MatrixTest {
     }
     
     @Test
+    void 'subsetting named columns preserves non-matrix columns'() {
+        Matrix m = new Matrix([
+            1..100,
+            201..300
+        ])
+        
+        m.@names = (1..100).collect { "Foo"+it }
+        m.sample = ["sample1","sample2"]
+        
+       Matrix small = m[][1..2]
+       
+       assert small.columnDimension == 2
+       assert small.rowDimension == 2
+       assert small.@names == ["Foo2","Foo3"]
+       assert small.sample == ["sample1","sample2"]
+       
+       println small
+       
+       small = m[][1,2]
+       assert small.columnDimension == 2
+       assert small.rowDimension == 2
+       assert small.@names == ["Foo2","Foo3"]
+       assert small.sample == ["sample1","sample2"]
+       
+    }
+
+    @Test
     void subsetColumnsNonContig() {
         Matrix m = new Matrix([
             1..100,

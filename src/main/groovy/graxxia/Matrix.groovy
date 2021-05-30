@@ -52,8 +52,17 @@ class StopIteration {
  * it with support for non-matrix columns to create an experience 
  * similar to R or Pandas DataFrames.
  * <p>
- * Matrix wraps the
- * underlying matrix as a delegate, so all the original methods of
+ * This class takes a specific approach to emulating the DataFrame experience, in that
+ * it models the matrix as two distinct sets of columns, these being the "matrix columns"
+ * and the "non-matrix" columns. Matrix columns can only hold doubles and are stored as a dense
+ * double array internally (wrapped by Apache-commons-math RealMatrix). The non-matrix columns
+ * are stored as expando properties on the Matrix object itself and can be of any (even heterogenous) 
+ * data types. Where sensible, matrix operations
+ * such as subsetting rows or columns preserve the corresponding matrix column values. Conceptually
+ * you can think of the design as breaking data into numeric data to be manipulated and metadata
+ * about that numeric data. 
+ * <p>
+ * Matrix wraps the underlying matrix as a delegate, so all the original methods of
  * the Commons-Math implementation are available directly, along with
  * Groovy-enhanced methods and properties.
  * <p>
@@ -75,6 +84,15 @@ class StopIteration {
  * assert m[][0] == [1,3]
  * assert m[][1] == [2,4]
  * </pre>
+ * You can access contiguous subsets of columns by using the groovy range operator:
+ * <pre>
+ * m[][0..1] // submatrix with all the rows but onlyu column 0 and 1
+ * </pre>
+ * Non-contiguous subsets of columns can be extracted using comma separated values in the brackets:
+ * <pre>
+ * m[][0,3] // submatrix with all the rows but onlyu column 0 and 3
+ * </pre>
+ * 
  * If the columns have names, they can be accessed that way too (with order
  * respected if you provide a list - which is a way to re-order columns):
  * <pre>
@@ -775,7 +793,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             return new Array2DRowRealMatrix(dMatrix)        
     }
     
-    private void transferPropertiesToRows(Matrix result, List<Number> indices = null) {
+    protected void transferPropertiesToRows(Matrix result, List<Number> indices = null) {
         if(indices != null) {
             this.properties.each {  String key, Iterable value ->
                 result[key] = value[indices]
