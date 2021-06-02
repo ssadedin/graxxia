@@ -2002,6 +2002,14 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     }
     
+    /**
+     * Perform dimensionality reduction to reduce the dimensions of the matrix columns
+     * down to the sepecified number of components.
+     * 
+     * @param numComponents
+     * @return a n x numComponents Matrix object where n is the original row dimension of this
+     *         matrix, with metadata carrying the loadings and basis of the PCA outputs
+     */
     @CompileStatic
     Matrix reduce(int numComponents) {
         EJMLPCA pca = new EJMLPCA(this)
