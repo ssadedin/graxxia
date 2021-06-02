@@ -1095,22 +1095,34 @@ class Matrix extends Expando implements Iterable, Serializable {
       
     @CompileStatic
     Matrix minus(Matrix m) {
-        new Matrix(this.matrix.subtract(m.matrix))
+        Matrix result = new Matrix(this.matrix.subtract(m.matrix))
+        this.transferPropertiesToRows(result)
+        result.copyDisplaySettingsFrom(this)
+        return result
     }
     
     @CompileStatic
     Matrix divide(double d) {
-        new Matrix((Array2DRowRealMatrix)this.matrix.scalarMultiply(1/d))
+        Matrix result = new Matrix((Array2DRowRealMatrix)this.matrix.scalarMultiply(1/d))
+        this.transferPropertiesToRows(result)
+        result.copyDisplaySettingsFrom(this)
+        return result
     }
     
     @CompileStatic
     Matrix plus(double x) {
-        new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(x))
+        def result = new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(x))
+        this.transferPropertiesToRows(result)
+        result.copyDisplaySettingsFrom(this)
+        return result
     }
     
     @CompileStatic
     Matrix minus(double x) {
-        new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(-x))
+        def result = new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(-x))
+        this.transferPropertiesToRows(result)
+        result.copyDisplaySettingsFrom(this)
+        return result
     }
     
     @CompileStatic
@@ -2005,6 +2017,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         result.@metadata.loadings = loading
         result.@metadata.basis =  basis
         result.@names = (1..numComponents).collect { 'PC' + it }
+        
+        // The result will have rows corresponding to the origional matrix, so we 
+        // can transfer metadata across
+        this.transferPropertiesToRows(this)
         return result
     }
     
