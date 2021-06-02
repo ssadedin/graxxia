@@ -575,6 +575,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         this.@names = other.@names
         this.@displayColumns = other.@displayColumns
         this.@displayRows = other.@displayRows
+        this.@displayPrecision = other.@displayPrecision
     }
     
     @CompileStatic
