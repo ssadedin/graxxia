@@ -2219,6 +2219,18 @@ class Matrix extends Expando implements Iterable, Serializable {
             }
         }
     }
+    
+    /**
+     * @return a matrix whose columns are zero-centered and scaled to have standard deviation
+     *         of 1
+     */
+    @CompileStatic
+    Matrix standardise() {
+        List<Stats> col_stats = (List<Stats>)this.columns.collect { MatrixColumn c -> Stats.from(c) }
+        return this.transform { double x, int i, int j ->
+            (x - col_stats[j].mean) / col_stats[j].standardDeviation
+        }.fillna(0)
+    }
    
     /**
      * Return smile attributes for this matrix
