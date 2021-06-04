@@ -2197,6 +2197,13 @@ class Matrix extends Expando implements Iterable, Serializable {
     double [][] getRawData() {
         return this.matrix.dataRef
     }
+    
+    @CompileStatic
+    Matrix fillna(double value = 0) {
+        this.transform { Double x ->
+            x.isNaN() ? value : x
+        }
+    }
   
 //    @CompileStatic
     Object asType(Class clazz) {
