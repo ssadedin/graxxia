@@ -2198,6 +2198,13 @@ class Matrix extends Expando implements Iterable, Serializable {
         return this.matrix.dataRef
     }
     
+    /**
+     * Return a matrix where the values that are NaN have been replaced with
+     * the specified value (default: 0)
+     * 
+     * @param value value to replace with
+     * @return  result matrix
+     */
     @CompileStatic
     Matrix fillna(double value = 0) {
         this.transform { Double x ->
