@@ -12,8 +12,10 @@ package graxxia
 import groovy.transform.CompileStatic;
 import java.text.ParseException;
 
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.regression.SimpleRegression
 
 /**
  * A Groovy wrapper for Commons-Math DescriptiveStatistcs, combined
@@ -428,6 +430,24 @@ class Stats extends DescriptiveStatistics implements Serializable {
         }
         return s
     }
+    
+    @CompileStatic
+    static double correlation(double [] x, double [] y) {
+       PearsonsCorrelation pc = new PearsonsCorrelation()
+       pc.correlation(x, y)
+    }
+    
+    @CompileStatic
+    static double correlation(Iterable<Number> x, Iterable<Number> y) {
+       SimpleRegression regression = new SimpleRegression();
+       Iterator<Number> xIter = x.iterator()
+       Iterator<Number> yIter = y.iterator()
+       while(xIter.hasNext()) {
+           regression.addData((double)xIter.next(), (double)yIter.next());
+       }
+       return regression.getR();
+    }
+ 
     
     Object asType(Class clazz) {
         if(clazz == Map) {
