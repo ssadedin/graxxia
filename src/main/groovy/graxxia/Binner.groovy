@@ -99,6 +99,14 @@ class Binner {
         this.min + binSize*bin + halfBinSize
     }
     
+    /**
+     * @return a list of the bin midpoints (eg: for plotting)
+     */
+    @CompileStatic
+    List<Double> getMidPoints() {
+        (0..<binCount).collect { value(it) }
+    }
+    
     @CompileStatic
     PolynomialSplineFunction spline(Map options = [:], Iterable<Number> xs, Iterable<Number> ys) {
 
