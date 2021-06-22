@@ -1253,9 +1253,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         if(columnNames) {
             if(!options.r) {
-                w.print "# "
+                w.write "# "
             }
-            w.println columnNames.join("\t")   
+            w.write columnNames.join("\t")   
+            w.write('\n')
         }
         
         if(this.rowDimension == 0)
@@ -1503,7 +1504,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         this.eachRow { row ->
             
             columnIndex = 0
-            w.print "| " +  props.collect { (it.hasNext() ? it.next() : " ").padRight(columnWidths[columnIndex++]) }.join(" | ") + " | "
+            w.print "| " +  props.collect { (String.valueOf(it.hasNext()) ? it.next() : " ").padRight(columnWidths[columnIndex++]) }.join(" | ") + " | "
            
             w.println row.collect { format.format(it).padRight(columnWidth) }.join(" | ") + "|"
             ++index
