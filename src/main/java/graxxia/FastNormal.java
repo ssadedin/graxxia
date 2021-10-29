@@ -181,7 +181,7 @@ public class FastNormal extends AbstractRealDistribution {
 
     /** {@inheritDoc} */
     @Override
-    public double logDensity(double x) {
+    final public double logDensity(double x) {
         final double x0 = x - mean;
         final double x1 = x0 / standardDeviation;
         return -0.5 * x1 * x1 - logStandardDeviationPlusHalfLog2Pi;
@@ -194,7 +194,7 @@ public class FastNormal extends AbstractRealDistribution {
      * is returned, as in these cases the actual value is within
      * {@code Double.MIN_VALUE} of 0 or 1.
      */
-    public double cumulativeProbability(double x)  {
+    final public double cumulativeProbability(double x)  {
         final double dev = x - mean;
         if (FastMath.abs(dev) > 40 * standardDeviation) {
             return dev < 0 ? 0.0d : 1.0d;
@@ -206,7 +206,7 @@ public class FastNormal extends AbstractRealDistribution {
      * @since 3.2
      */
     @Override
-    public double inverseCumulativeProbability(final double p) throws OutOfRangeException {
+    final public double inverseCumulativeProbability(final double p) throws OutOfRangeException {
         if (p < 0.0 || p > 1.0) {
             throw new OutOfRangeException(p, 0, 1);
         }
