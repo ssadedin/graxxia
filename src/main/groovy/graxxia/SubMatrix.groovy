@@ -69,32 +69,31 @@ class SubMatrix {
     }
     
     @CompileStatic
-    Iterator iterator() {
+    class SubMatrixIterator implements Iterator {
         
-       final myRowOffset = rowOffset
-       final myNumRows = numRows
-       final myData = data
-       
-       new Iterator() {
-           
+           final int myRowOffset = rowOffset
+           final int myNumRows = numRows
+           final double[][] myData = data.matrix.dataRef
+  
            int i = myRowOffset
            final int iNumRows = i + myNumRows
            
-           @CompileStatic
            boolean hasNext() {
                return i<iNumRows;
            }
            
-           @CompileStatic
            Object next() {
-               myData.matrix.dataRef[i++]
+               myData[i++]
            }
            
-           @CompileStatic
            void remove() { 
                throw new UnsupportedOperationException() 
            }
-       } 
+    }
+    
+    @CompileStatic
+    Iterator iterator() {
+       return new SubMatrixIterator() 
     }
     
     @CompileStatic
