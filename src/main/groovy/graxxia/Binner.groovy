@@ -153,6 +153,27 @@ class Binner {
     }
     
    @CompileStatic
+   List<Stats> stats(final double [] xs, final double [] ys) {
+        
+        List<Stats> result = (1..binCount).collect { new Stats() }
+        
+        final double binSize = (max - min) / binCount
+        for(int i=0; i < xs.length; ++i) {
+            double y = ys[i]
+            double x = xs[i]
+            if(Double.isNaN((double)y))
+                continue
+            int bin = (int)((x - min) / binSize)
+            if(bin < 0)
+                continue
+            if(bin >= binCount)
+                continue
+            result[bin].addValue(y)
+        }
+        return result
+   }
+
+   @CompileStatic
     List<Stats> stats(Iterable<Number> xs, Iterable<Number> ys) {
         
         List<Stats> result = (1..binCount).collect { new Stats() }
