@@ -48,8 +48,8 @@ class MatrixColumnList {
         int colIndex = 0
         List<String> names = (List<String>)columns[arg]*.name.collect { n -> ++colIndex; n == null ? colIndex.toString() : n }
         List<MatrixColumn> cols = columns[arg]
-        Map columnMap = [ names, cols ].transpose().collectEntries()
-        def result =  new Matrix(columnMap)
+        Map<String,Iterable> columnMap = [ names, cols ].transpose().collectEntries()
+        def result = new Matrix(columnMap)
         columns[0].sourceMatrix.transferPropertiesToRows(result)
         return result
     } 

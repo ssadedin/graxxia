@@ -150,15 +150,15 @@ class TSV implements Iterable<PropertyMapper> {
         if(customColumnTypes instanceof List)
             columnTypes = customColumnTypes
         
-        new Iterator() {
+        new Iterator<PropertyMapper>() {
             @CompileStatic
             boolean hasNext() {
                 i.hasNext()
             }
             
             @CompileStatic
-            Object next() {
-                PropertyMapper line = i.next()
+            PropertyMapper next() {
+                PropertyMapper line = (PropertyMapper)i.next()
                 
                 if(!columnTypes) {
                     columnTypes = inferColumnTypes(line)
