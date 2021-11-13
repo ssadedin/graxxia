@@ -108,33 +108,46 @@ class Binner {
     }
     
     @CompileStatic
+    PolynomialSplineFunction spline(Map options = [:], double [] xs, double [] ys) {
+
+        def stats = stats(xs, ys)
+        
+        return splineFromStats(options, stats)
+    }
+
+    @CompileStatic
     PolynomialSplineFunction spline(Map options = [:], Iterable<Number> xs, Iterable<Number> ys) {
 
         def stats = stats(xs, ys)
         
+        return splineFromStats(options, stats)
+    }
+
+    @CompileStatic
+    PolynomialSplineFunction splineFromStats(Map options=[:], List<Stats> stats) {
         int splinePoints = binCount
         if(options.startPoint)
             ++splinePoints
-        if(options.endPoint)    
+        if(options.endPoint)
             ++splinePoints
-        
+
         final double [] bins = new double[splinePoints]
-        
+
         double [] binValues = stats*.mean as double[]
-        
+
         double [] values = new double[splinePoints]
-        
+
         int binOffset = 0
-        
+
         if(options.endPoint || options.startPoint) {
             System.arraycopy(binValues, 0, values, 1, binValues.size())
-             
+
             if(options.startPoint) {
                 bins[0] = ((List)options.startPoint)[0]
                 values[0] = ((List)options.startPoint)[1]
                 ++binOffset
             }
-            
+
             if(options.endPoint) {
                 bins[-1] = ((List)options.endPoint)[0]
                 values[-1] = ((List)options.endPoint)[1]
@@ -142,14 +155,23 @@ class Binner {
         }
         else
             values = binValues
-       
-        
+
+
         final double minStart = min + binSize / 2.0d
         for(int i=0; i<binCount; ++i) {
             bins[i+binOffset] = minStart + i*binSize
         }
         
-        new LinearInterpolator().interpolate(bins, values)
+        double [] goodBins = bins
+        double [] goodValues = values
+        
+        final List<Number> goodValueIndices = values.findIndexValues { !Double.isNaN((double)it) }
+        if(goodValueIndices.size() != values.size()) {
+            goodValues = values[goodValueIndices] as double[]
+            goodBins = bins[goodValueIndices] as double[]
+        }
+
+        new LinearInterpolator().interpolate(goodBins, goodValues)
     }
     
    @CompileStatic
