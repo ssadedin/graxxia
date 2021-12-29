@@ -169,10 +169,20 @@ class Stats extends DescriptiveStatistics implements Serializable {
     static Stats from(Iterable values, Closure c=null) {
         Stats s = new Stats()
         boolean withIndex = c != null && c.maximumNumberOfParameters > 1
-        values.eachWithIndex { rawValue, index ->
+        values.eachWithIndex { Object rawValue, index ->
               if(c == null) {
-                  double value = (double) (rawValue instanceof Number ? rawValue : Double.parseDouble(String.valueOf(rawValue)))
-                  s.addValue(value)
+                  double value
+                  if(rawValue.is(null)) {
+                      // skip
+                  }
+                  else
+                  if(rawValue instanceof Number) {
+                      s.addValue((double)rawValue)
+                  }
+                  else {
+                      double doubleValue = Double.parseDouble(rawValue.toString())
+                      s.addValue(doubleValue)
+                  }
               }
               else {
                   def value = withIndex ? c(rawValue, index) : c(rawValue)
