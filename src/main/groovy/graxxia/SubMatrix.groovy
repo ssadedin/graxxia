@@ -114,7 +114,7 @@ class SubMatrix {
             return this.col(this.data.@names.indexOf(name))
         }
         
-       def result = ((GroovyObject)super).getProperty(name)
+       def result = ((GroovyObject)this).getProperty(name)
        if(result == null)
            throw new IllegalArgumentException("No column named $name in this Matrix")
            
