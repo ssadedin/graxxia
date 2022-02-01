@@ -9,15 +9,44 @@
  *  further details.
  */
 package graxxia
- 
+
 import com.xlson.groovycsv.CsvParser;
+
 import com.xlson.groovycsv.CsvIterator;
 import com.xlson.groovycsv.PropertyMapper;
 
 import groovy.transform.CompileStatic;
 
 import java.io.Reader;
+import java.util.stream.Stream
 import java.util.zip.GZIPInputStream
+
+@CompileStatic
+class CommentSkippingReader extends BufferedReader {
+    
+    String commentPrefix
+
+    @Override
+    public String readLine() throws IOException {
+        String line = super.readLine();
+        while(line != null && line.startsWith(commentPrefix))
+            line = super.readLine()
+            
+        return line
+    }
+
+    @Override
+    public Stream<String> lines() {
+        return super.lines().filter { String line ->
+            !line.startsWith(commentPrefix)
+        }
+    }
+
+    public CommentSkippingReader(Reader wrapped, String commentPrefix) {
+        super(wrapped);
+        this.commentPrefix = commentPrefix
+    }
+}
 
 /**
  * A convenience wrapper around Groovy-CSV (which is
@@ -54,7 +83,7 @@ class TSV implements Iterable<PropertyMapper> {
 	
 	CsvIterator parser
     
-    Closure reader
+    ReaderFactory reader
     
     Map options
     
@@ -65,15 +94,13 @@ class TSV implements Iterable<PropertyMapper> {
     }
     
     TSV(Map options=[:], String fileName) {
-        this.reader =  { 
-            getReader(fileName)
-        }
+        this.reader =  new StringReaderFactory(source: fileName)
         this.options = options
         checkFirstLine()
     }
     
     TSV(Map options=[:], Reader r) {
-        this.reader =  { return r }
+        this.reader =  new DirectReaderFactory(reader:r)
         this.options = options
         checkFirstLine()
     }
@@ -88,19 +115,13 @@ class TSV implements Iterable<PropertyMapper> {
         if(!options.containsKey("separator"))
             options.separator = "\t"
             
-        Reader originalReader = reader()
+        Reader originalReader = reader.newReader()
+        Reader finalReader = originalReader
         if(this.options.commentChar) {
-            Reader r = reader()
-            if(r.is(originalReader))
-                throw new IllegalArgumentException("The commentChar option cannot be used with a raw Reader. Please create a TSV with a fileName argument instead")
-                
-            int skipLines = 0
-            while(r.readLine()?.startsWith(this.options.commentChar))
-                ++skipLines
-            this.options.skipLines = this.options.get('skipLines',0) + skipLines
+            finalReader = new CommentSkippingReader(originalReader, this.options.commentChar)
         }
-        
-        CsvParser.parseCsv(options, originalReader)
+
+        CsvParser.parseCsv(options, finalReader)
     }
 	
     /*
@@ -327,8 +348,6 @@ class TSV implements Iterable<PropertyMapper> {
             save(listMap, w, '\t')
         }
     }
-
-    
     
     /**
      * Convenience method to save a TSV in form of list of maps as a file

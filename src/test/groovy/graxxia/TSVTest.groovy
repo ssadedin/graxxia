@@ -127,6 +127,20 @@ class TSVTest {
        assert lm[0].DatabaseID == 'OMIM:210100'
     }
      
+    @Test
+    void 'read a TSV with comment lines and headers using Reader'() {
+       Reader reader = new File('src/test/data/tsv_with_comments_and_headers.tsv').newReader()
+       TSV tsv = new TSV(reader, commentChar:'#') 
+       
+       def lm = tsv.toListMap()
+       
+       assert lm[0].DatabaseID == 'OMIM:210100'
+       
+       assert lm[5].DatabaseID == 'OMIM:615763'
+
+       reader.close()
+    }
+
     Reader toTsv(List values) {
         new StringReader(values*.join("\t").join("\n").trim().stripIndent())
     }
