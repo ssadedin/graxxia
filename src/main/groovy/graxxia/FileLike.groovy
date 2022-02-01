@@ -46,13 +46,13 @@ class FileLike {
     
     static ReaderFactory readerFactory(Object source) {
         if(source instanceof String)
-            return new StringReaderFactory(source:source)
+            return new StringReaderFactory(source:(String)source)
         else
         if(source instanceof File)
-            return new FileReaderFactory(file:source)
+            return new FileReaderFactory(file:(File)source)
         else
         if(source instanceof Reader)
-            return new DirectReaderFactory(reader:source)
+            return new DirectReaderFactory(reader:(Reader)source)
         else
             throw new IllegalArgumentException("No known way to convert object of type ${source.class} to reader")
     }
