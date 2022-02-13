@@ -1380,36 +1380,49 @@ class Matrix extends Expando implements Iterable, Serializable {
     
     int displayColumns = 50
     int displayRows = DISPLAY_ROWS
+    int defaultColumnWidth = 10
        
     String toString() {
        
         List<Map.Entry> userColumns = getUserColumns()
         
-        def headerCells = this.@names
+        def headerCells = this.@names ? this.@names : (1..this.columnDimension).collect { ' ' }
+
         if(this.properties) {
             headerCells = userColumns*.key + headerCells
         }
         
         int halfMaxCols = Math.floor(displayColumns/2)
+        List<Integer> headerCellIndexes = (0..<headerCells.size())
+        List<Integer> leftIndexes = 0..<headerCells.size()
+        List<Integer> rightIndexes = []
         if(headerCells.size() > displayColumns) {
-           headerCells = headerCells[0..halfMaxCols] + ['...'] + headerCells[(headerCells.size()-halfMaxCols)..<headerCells.size()]
+            
+           leftIndexes = 0..halfMaxCols
+           rightIndexes = (headerCells.size()-halfMaxCols)..<headerCells.size()
+            
+           headerCellIndexes = leftIndexes + rightIndexes
+           headerCells = headerCells[leftIndexes] + ['...'] + headerCells[rightIndexes]
         }
             
         
-        int columnWidth = Math.max(10, headerCells ? headerCells*.size()?.max()?:0 : 0)
+        int defaultColumnWidth = Math.max(this.@defaultColumnWidth, headerCells*.size()?.max()?: 0)
+        
+        int maxUserColumnWidth = 20
+        
         int rowNumWidth = 6
         
-        String headers = headerCells ? (" " * rowNumWidth) + headerCells*.padRight(columnWidth).join(" ") + "\n" : ""
-        
+       
         DecimalFormat format = new DecimalFormat()
         format.minimumFractionDigits = 0
         format.maximumFractionDigits = displayPrecision
-        
        
+        List<Integer> columnWidths = [defaultColumnWidth] * (headerCells.size())
+        
         int rowCount = 0
         def printRow = { row ->
             
-           List cells
+          List cells
            if(row == null)
                 cells = []
            else 
@@ -1419,12 +1432,23 @@ class Matrix extends Expando implements Iterable, Serializable {
            }
            
            if(cells.size()>displayColumns) {
-               cells = cells[0..halfMaxCols] + ['...'] + cells[(cells.size()-halfMaxCols)..<cells.size()]
+               cells = cells[leftIndexes] + ['...'] + cells[rightIndexes]
            }
            
+           int columnIndex = 0
            List values = cells.collect { value ->
-               if(!(value instanceof Double))
-                   return String.valueOf(value).padRight(columnWidth)
+               int columnWidth = columnWidths[columnIndex]?:defaultColumnWidth
+               
+               ++columnIndex;
+
+               if(!(value instanceof Double)) {
+                   String renderedValue = String.valueOf(value)
+                   if(renderedValue.size()>columnWidth) {
+                       renderedValue = renderedValue.substring(0, columnWidth-4) + '...'
+                   }
+                   
+                   return renderedValue.padRight(columnWidth)
+               }
                        
                String result
                if(value < 0.0001d && value !=0 && value > -0.0001d)  {
@@ -1439,6 +1463,22 @@ class Matrix extends Expando implements Iterable, Serializable {
            return ((rowCount++) + ":").padRight(rowNumWidth) + values.join(" ")  
         }
         
+        // Adjust width based on user columns
+        for(int i=0; i<userColumns.size(); ++i) {
+            Map.Entry<String,List> e = userColumns[i]
+            if(e.value != null) {
+                columnWidths[i] = Math.min(maxUserColumnWidth,e.value*.toString()*.size().max())
+            }
+        }
+       
+        String headers = ""
+        if(headerCells) {
+            int headerIndex = 0
+            headers =  (" " * rowNumWidth) + 
+               headerCells.collect { it.padRight(columnWidths[headerIndex++]) }
+               .join(" ") + "\n"
+        }
+
         if(matrix.rowDimension<displayRows) {
             return "${matrix.rowDimension}x${matrix.columnDimension + this.properties.size()} Matrix:\n"+ 
                 headers + 
