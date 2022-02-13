@@ -1386,7 +1386,7 @@ class Matrix extends Expando implements Iterable, Serializable {
        
         List<Map.Entry> userColumns = getUserColumns()
         
-        def headerCells = this.@names ? this.@names : (1..this.columnDimension).collect { ' ' }
+        List<String> headerCells = this.@names ? this.@names : (1..this.columnDimension).collect { ' ' }
 
         if(this.properties) {
             headerCells = userColumns*.key + headerCells
@@ -1466,8 +1466,15 @@ class Matrix extends Expando implements Iterable, Serializable {
         // Adjust width based on user columns
         for(int i=0; i<userColumns.size(); ++i) {
             Map.Entry<String,List> e = userColumns[i]
+            List widthBasis = e.value
+            if(matrix.rowDimension>=displayRows) {
+                widthBasis = [
+                    *e.value[0..displayRows/2],
+                    *e.value[-(displayRows/2)..-1]    
+                ]
+            }
             if(e.value != null) {
-                columnWidths[i] = Math.min(maxUserColumnWidth,e.value*.toString()*.size().max())
+                columnWidths[i] = Math.min(maxUserColumnWidth,widthBasis*.toString()*.size().max())
             }
         }
        
@@ -1475,7 +1482,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(headerCells) {
             int headerIndex = 0
             headers =  (" " * rowNumWidth) + 
-               headerCells.collect { it.padRight(columnWidths[headerIndex++]) }
+               headerCells.collect { it.padRight(columnWidths[headerIndex++]?:defaultColumnWidth) }
                .join(" ") + "\n"
         }
 
