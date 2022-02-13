@@ -1360,7 +1360,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             rfl = true
         }
 
-        if('readFirstLine' in options)
+        if(options.containsKey('readFirstLine'))
             rfl = options.readFirstLine
 
       
