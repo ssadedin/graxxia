@@ -319,6 +319,8 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(!nonNumerics.isEmpty() && columnNames == null)
             throw new IllegalArgumentException("Column names must be provided as second argument when non-numeric columns are used")
         
+        if(isNumerics.every { !it }) 
+            throw new IllegalArgumentException("No numeric columns were detected. Check if column headers were read as data and apply readFirstLine:false to ignore them.")
         
         final int columnCount = isNumerics.size()
         
