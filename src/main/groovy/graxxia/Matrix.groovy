@@ -571,7 +571,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     @CompileStatic
-    private void inheritSettings(final Matrix other) {
+    void inheritSettings(final Matrix other) {
         this.@names = other.@names
         this.@displayColumns = other.@displayColumns
         this.@displayRows = other.@displayRows
