@@ -140,6 +140,23 @@ class TSVTest {
 
        reader.close()
     }
+    
+    @Test
+    void 'save a ListMap in CSV format with custom line endings'() {
+       def lm = [
+           [dog: 1, cat: 'brown'],
+           [dog: 2, cat: 'green'],
+           [dog: 9, cat: 'funky'],
+       ] 
+       
+       TSV.save(lm, 'test.unix.csv', lineEnd: '\n', separator: ',')
+       
+       assert new CSV('test.unix.csv').toListMap() == lm
+
+       TSV.save(lm, 'test.dos.csv', lineEnd: '\r\n', separator: ',')
+
+       TSV.save(lm, 'test.default.csv')
+    }
 
     Reader toTsv(List values) {
         new StringReader(values*.join("\t").join("\n").trim().stripIndent())

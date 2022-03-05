@@ -343,9 +343,9 @@ class TSV implements Iterable<PropertyMapper> {
      * @param listMap
      */
     @CompileStatic
-    static void save(List<Map<String,Object>> listMap, String filePath) {
+    static void save(Map<String,String> options=[separator:'\t', lineEnd:'\n'], List<Map<String,Object>> listMap, String filePath) {
         new File(filePath).withWriter { w ->
-            save(listMap, w, '\t')
+            save(listMap, w, options.separator?:'\t', options.lineEnd?:'\n')
         }
     }
     
@@ -364,12 +364,21 @@ class TSV implements Iterable<PropertyMapper> {
      */
     @CompileStatic
     static void save(final List<Map<String,Object>> listMap, final Writer w, final String sep) {
+        save(listMap, w, sep, '\n')
+    }
+
+     /**
+     * Convenience method to save a TSV in form of list of maps as a file
+     * @param listMap
+     */
+    @CompileStatic
+    static void save(final List<Map<String,Object>> listMap, final Writer w, final String sep, final String lineEnd) {
         w.withWriter {
             w.write(listMap[0]*.key.join(sep))
-            w.write('\n')
+            w.write(lineEnd)
             for(Map<String,Object> line in listMap) {
                 w.write(line*.value.join(sep))
-                w.write('\n')
+                w.write(lineEnd)
             }
         }
     }
