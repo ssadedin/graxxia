@@ -23,11 +23,15 @@ import org.apache.commons.math3.linear.RealVector
 import org.apache.commons.math3.linear.SingularValueDecomposition
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 
+import com.twosigma.beakerx.jvm.object.OutputCell
+import com.twosigma.beakerx.table.TableDisplay
 import com.xlson.groovycsv.PropertyMapper
 
 import groovy.transform.CompileStatic;
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import jupyter.Displayer
+import jupyter.Displayers
 import smile.classification.RandomForest
 import smile.data.DataFrame
 import smile.data.formula.Formula
@@ -2287,6 +2291,27 @@ class Matrix extends Expando implements Iterable, Serializable {
         return this.transform { double x, int i, int j ->
             (x - col_stats[j].mean) / col_stats[j].standardDeviation
         }.fillna(0)
+    }
+    
+    TableDisplay display(Map attributes = [:]) {
+        TableDisplay display = new TableDisplay(this.toListMap())
+        for(Map.Entry e : attributes) {
+            display[e.key] = e.value
+        }
+        return display
+    }
+    
+    @CompileStatic
+    static void registerBeakerX() {
+        Displayers.register(
+            Matrix.class,
+            new Displayer<Matrix>() {
+                @Override
+                public Map<String, String> display(Matrix matrix) {
+                    new TableDisplay(matrix.toListMap()).display();
+                    return OutputCell.DISPLAYER_HIDDEN;
+                }
+            });
     }
    
     /**
