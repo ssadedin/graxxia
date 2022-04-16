@@ -20,6 +20,31 @@ import com.twosigma.beakerx.chart.xychart.plotitem.Text
 /**
  * Implements a standard BoxPlot using BeakerX widget BarPlot features
  * 
+ * To use, pass it a set of iterables containing numbers to plot:
+ * 
+ * <pre>
+ * BoxPlot.of([
+ *   [1,2,3,4,5,6],
+ *   [2,3,4,5,6,7]
+ * ])
+ * </pre>
+ * 
+ * This returns you the {@link com.twosigma.beakerx.chart.xychart.Plot} object
+ * that you can then configure. For convenience, attributes can be passed as named
+ * args to the initial function, and an additional <code>labels</code> argument may 
+ * be provided to name the categories:
+ * 
+ * <pre>
+ * BoxPlot.of(
+ *   title: 'Some simple numbers', xLabel: 'Type of Number', 
+ *   labels: ['Smaller numbers', 'Bigger numbers']
+ *   [
+ *       [1,2,3,4,5,6],
+ *       [3,4,5,6,7,8]
+ *   ]
+ * )
+ * </pre>
+ * 
  * @author simon.sadedin
  */
 class BoxPlot {
