@@ -10,6 +10,8 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 
+import groovy.cli.commons.*
+
 class BeakerInterface extends HashMap {
     
     BeakerRunner runner

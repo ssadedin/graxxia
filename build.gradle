@@ -30,6 +30,7 @@ println "*"*80
 dependencies {
      compile "org.codehaus.groovy:groovy-all:$GROOVY_VERSION"
      compile group: 'org.codehaus.groovy', name: 'groovy', version: "$GROOVY_VERSION"
+     compile group: 'org.codehaus.groovy', name: 'groovy-cli-commons', version: "$GROOVY_VERSION"
      compile group: 'org.apache.ivy', name:'ivy', version:'2.2.0' 
      compile 'com.lowagie:itext:2.1.7'
      compile 'org.apache.commons:commons-math3:3.5'
@@ -38,7 +39,7 @@ dependencies {
      compile group: 'com.github.haifengl', name: 'smile-math', version: SMILE_VERSION
      compile group: 'com.github.haifengl', name: 'smile-netlib', version: '2.4.0'
      compile group: 'com.github.haifengl', name: 'smile-data', version: SMILE_VERSION
-     // compile group: 'com.github.haifengl', name: 'smile-plot', version: '1.5.2'
+     compile group: 'com.github.haifengl', name: 'smile-plot', version: SMILE_VERSION
 
      // compile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
      
