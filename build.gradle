@@ -39,7 +39,7 @@ dependencies {
      compile group: 'com.github.haifengl', name: 'smile-math', version: SMILE_VERSION
      compile group: 'com.github.haifengl', name: 'smile-netlib', version: '2.4.0'
      compile group: 'com.github.haifengl', name: 'smile-data', version: SMILE_VERSION
-     compile group: 'com.github.haifengl', name: 'smile-plot', version: SMILE_VERSION
+     // compile group: 'com.github.haifengl', name: 'smile-plot', version: SMILE_VERSION
 
      // compile group: 'org.jfree', name: 'jfreechart', version: '1.5.0'
      
