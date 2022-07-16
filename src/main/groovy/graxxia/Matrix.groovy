@@ -267,6 +267,11 @@ class Matrix extends Expando implements Iterable, Serializable {
     } 
     
     @CompileStatic
+    boolean sniffIsNumeric(short [] values) {
+        true
+    } 
+
+    @CompileStatic
     boolean sniffIsNumeric(double [] values) {
         true
     }
@@ -1910,7 +1915,6 @@ class Matrix extends Expando implements Iterable, Serializable {
         ] as List
     }
     
-    @CompileStatic
     List<Map> toListMap() {
         asListMap()
     }
