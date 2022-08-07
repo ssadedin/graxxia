@@ -2243,7 +2243,8 @@ class Matrix extends Expando implements Iterable, Serializable {
      * Fit a random forest on the the data in this matrix wiht the given column name 
      * as the response and all other columns as predictors.
      * 
-     * @param params    named parameter arguments, eg: max_depth, max_nodes (see Smile 
+     * @param params    named parameter arguments, including 'predictors', or any of the
+     *                  documented Smile parameters, eg: max_depth, max_nodes (see Smile 
      *                  <a href='https://github.com/haifengl/smile/blob/master/core/src/main/java/smile/classification/RandomForest.java#L182'>RandomForest docs</a> 
      *                  for valid values)
      * @param response  String value specifying the name of the column to treat as the response
@@ -2253,10 +2254,19 @@ class Matrix extends Expando implements Iterable, Serializable {
        DataFrame df = this as DataFrame 
        
        List allColumns = [] 
-       if(this.getUserColumns())
-           allColumns.addAll(getUserColumns()*.key)
-       if(this.@names)
-           allColumns.addAll(this.@names)
+       if(params.containsKey('predictors')) {
+           allColumns.addAll(params.predictors)
+           assert params.predictors.every { it in this.@names }
+           
+           // Don't let it get passed through to smile
+           params.remove('predictors')
+       }
+       else {
+           if(this.getUserColumns())
+               allColumns.addAll(getUserColumns()*.key)
+           if(this.@names)
+               allColumns.addAll(this.@names)
+       }
            
        List predictors = allColumns.grep { it != response }
        
