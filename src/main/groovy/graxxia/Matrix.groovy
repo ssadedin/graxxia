@@ -1629,7 +1629,29 @@ class Matrix extends Expando implements Iterable, Serializable {
             this.setNames(value)
         }
         else {
-            super.setProperty(name,value)
+            // In some other places we rely on custom values that are
+            // set being Iterables, so for now convert them here
+            if(value instanceof double[]) {
+                super.setProperty(name,value as List)
+            }
+            else
+            if(value instanceof String[]) {
+                super.setProperty(name,value as List)
+            }
+            else
+            if(value instanceof int[]) {
+                super.setProperty(name,value as List)
+            }
+            else
+            if(value instanceof long[]) {
+                super.setProperty(name,value as List)
+            }
+            else
+            if(value instanceof float[]) {
+                super.setProperty(name,value as List)
+            }
+            else
+                super.setProperty(name,value)
         }
     }
     
