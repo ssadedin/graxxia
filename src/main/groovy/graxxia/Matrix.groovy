@@ -25,6 +25,7 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 
 import com.twosigma.beakerx.jvm.object.OutputCell
 import com.twosigma.beakerx.table.TableDisplay
+import com.twosigma.beakerx.table.highlight.TableDisplayCellHighlighter
 import com.xlson.groovycsv.PropertyMapper
 
 import groovy.transform.CompileStatic;
@@ -2330,9 +2331,17 @@ class Matrix extends Expando implements Iterable, Serializable {
     }
     
     TableDisplay display(Map attributes = [:]) {
+        
         TableDisplay display = new TableDisplay(this.toListMap())
         for(Map.Entry e : attributes) {
-            display[e.key] = e.value
+            if(display.hasProperty(e.key))
+                display[e.key] = e.value
+        }
+        
+        if(attributes.heatmap == true) {
+            for(String colName in this.@names) {
+                display.addCellHighlighter(TableDisplayCellHighlighter.getHeatmapHighlighter(colName, TableDisplayCellHighlighter.SINGLE_COLUMN))
+            }
         }
         return display
     }
