@@ -1394,7 +1394,8 @@ class Matrix extends Expando implements Iterable, Serializable {
     int displayColumns = 50
     int displayRows = DISPLAY_ROWS
     int defaultColumnWidth = 10
-       
+    int maxUserColumnWidth = 20
+        
     String toString() {
        
         List<Map.Entry> userColumns = getUserColumns()
@@ -1417,12 +1418,8 @@ class Matrix extends Expando implements Iterable, Serializable {
            headerCellIndexes = leftIndexes + rightIndexes
            headerCells = headerCells[leftIndexes] + ['...'] + headerCells[rightIndexes]
         }
-            
         
         int defaultColumnWidth = Math.max(this.@defaultColumnWidth, headerCells*.size()?.max()?: 0)
-        
-        int maxUserColumnWidth = 20
-        
         int rowNumWidth = 6
         
        
@@ -1479,9 +1476,10 @@ class Matrix extends Expando implements Iterable, Serializable {
         // Adjust width based on user columns
         for(int i=0; i<userColumns.size(); ++i) {
             Map.Entry<String,List> e = userColumns[i]
-            List widthBasis = e.value
+            List widthBasis = [e.key, *e.value]
             if(matrix.rowDimension>=displayRows) {
                 widthBasis = [
+                    e.key,
                     *e.value[0..displayRows/2],
                     *e.value[-(displayRows/2)..-1]    
                 ]
