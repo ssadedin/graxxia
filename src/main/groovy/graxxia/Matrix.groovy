@@ -202,7 +202,10 @@ class Matrix extends Expando implements Iterable, Serializable {
                 row[j] = (double)(columns[j].getDoubleAt(i))
         }
         this.matrix = new Array2DRowRealMatrix(newData,false)
-        this.names = columns.collect { MatrixColumn c -> c.name }
+        
+        if(columns.any { it.name != null }) {
+            this.names = columns.collect { MatrixColumn c -> c.name }
+        }
     }
     
     /**
