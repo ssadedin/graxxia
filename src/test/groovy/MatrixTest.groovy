@@ -1269,7 +1269,7 @@ class MatrixTest {
 
        RandomForest rf = m.forest('Y', max_depth:2)
        
-       println "Error = " + rf.error()
+       println "Error = " + rf.metrics()
    }
    
    @Test
