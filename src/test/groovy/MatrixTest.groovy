@@ -1361,7 +1361,51 @@ class MatrixTest {
       
       assert headers[0] == 'foo'
    }
+   
+   @Test
+   void 'display wide column names'() {
+       def m = new Matrix(a_really_really_long_column_name: [1,2,3], other_column: [4,5,6])
+       
+       m.wide_non_numeric_column_name = ['a','b','c']
+       
+       println m.toString()
+   }
+
+ 
+   @Test
+   void 'select columns by integer array'() {
+      Matrix m = new Matrix([a: [1,2,3,4], b:[5,6,7,8], c: [9,10,11,12]])
+      m.person = ['fred','sam','john','sue']
+      m.age = [ 30i, 20i, 46i, 92i]
+      
+      int [] indices = [1,2] as int[]
+      
+      Matrix subset = m[][indices]
+      
+      println "Subset is:\n" + subset
+      
+      assert subset.columnDimension == 2
+      assert subset.rowDimension == 4
+      assert subset[1][1] == 10
+   }
     
+   @Test
+   void 'select columns by double array'() {
+      Matrix m = new Matrix([a: [1,2,3,4], b:[5,6,7,8], c: [9,10,11,12]])
+      m.person = ['fred','sam','john','sue']
+      m.age = [ 30i, 20i, 46i, 92i]
+      
+      double [] indices = [1,2] as int[]
+      
+      Matrix subset = m[][indices]
+      
+      println "Subset is:\n" + subset
+      
+      assert subset.columnDimension == 2
+      assert subset.rowDimension == 4
+      assert subset[1][1] == 10
+  }
+
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
         for(int i=0; i<rows; ++i) {

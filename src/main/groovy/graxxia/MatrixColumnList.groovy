@@ -37,6 +37,23 @@ class MatrixColumnList {
         }
         throw new IllegalArgumentException("Expected list of strings as column names or integers as column indices")
     }
+    
+    Object getAt(double [] indices) {
+        List<MatrixColumn> cols = indices.collect { Double value ->
+            int index = (int)value
+            if(columns[index] == null)
+                throw new IllegalArgumentException("Column ${index} is out of bounds. Matrix has only ${columns.size()} columns")
+            return columns[index] 
+        }
+    }
+
+    Object getAt(int [] indices) {
+        List<MatrixColumn> cols = indices.collect { Integer index ->
+            if(columns[index] == null)
+                throw new IllegalArgumentException("Column ${index} is out of bounds. Matrix has only ${columns.size()} columns")
+            return columns[index] 
+        }
+    }
 
     /**
      * Implement selection of a range of columns
