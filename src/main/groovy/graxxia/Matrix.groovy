@@ -1709,8 +1709,21 @@ class Matrix extends Expando implements Iterable, Serializable {
         applyViaIndices(groupByMethod, c)
     }    
     
-    Map<Object,Matrix> groupBy(Closure c) {
+    @CompileStatic
+    List<Integer> order(@ClosureParams(value=SimpleType.class,options="double[]") Closure c) {
         List indices = (0..<this.rowDimension).collect { it }
+        IterationDelegate delegate = new IterationDelegate(this, c)
+        Closure cloned = (Closure)c.clone()
+        cloned.delegate = delegate
+
+        return indices.sort { i ->
+            ((IterationDelegate)delegate).row = i
+            return cloned(this.dataRef[i])
+        }
+    }
+    
+    Map<Object,Matrix> groupBy(Closure c) {
+        List indices = (0..<this.rowDimension) as List
         IterationDelegate delegate = new IterationDelegate(this, c)
         Closure cloned = (Closure)c.clone()
         cloned.delegate = delegate

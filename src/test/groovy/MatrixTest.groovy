@@ -1405,6 +1405,22 @@ class MatrixTest {
       assert subset.rowDimension == 4
       assert subset[1][1] == 10
   }
+  
+  @Test
+  void 'test order method'() {
+      Matrix m = new Matrix([a: [1,2,3,4], b:[8,6,2,9], c: [9,10,11,12]])
+      m.person = ['fred','sam','john','sue']
+      m.age = [ 30i, 20i, 46i, 92i]
+ 
+      def order = m.order { age }
+      
+      assert order == [1, 0, 2, 3]
+      
+      
+      def order2 = m.order { b }
+      assert order2 == [2, 1, 0, 3]
+      
+  }
 
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
