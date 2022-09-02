@@ -458,6 +458,10 @@ class Stats extends DescriptiveStatistics implements Serializable {
        return regression.getR();
     }
  
+    @CompileStatic
+    double getMedian() {
+        return this.getPercentile(50)
+    }
     
     Object asType(Class clazz) {
         if(clazz == Map) {
