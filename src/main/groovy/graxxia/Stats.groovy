@@ -83,7 +83,7 @@ class Stats extends DescriptiveStatistics implements Serializable {
         Stats s = new Stats()
         boolean withIndex = (c != null) && c.maximumNumberOfParameters > 2
         for(int i=0; i<values.size();++i) {
-            for(int j=0; j<values.size(); ++j) {
+            for(int j=0; j<values[i].size(); ++j) {
                 double value = values[i][j];
                 if(c == null) {
                     s.addValue(value)
