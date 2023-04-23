@@ -826,6 +826,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     void copyDisplaySettingsFrom(final Matrix other) {
         this.@displayColumns = other.@displayColumns
         this.@displayRows = other.@displayRows 
+        this.@displayPrecision = other.@displayPrecision
     }
     
     /**
