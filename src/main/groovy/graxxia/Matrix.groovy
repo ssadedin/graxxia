@@ -2349,6 +2349,14 @@ class Matrix extends Expando implements Iterable, Serializable {
         }.fillna(0)
     }
     
+    /**
+     * Convenience method to return summary statistics of all the values in this Matrix
+     */
+    @CompileStatic 
+    Stats summarize() {
+        return Stats.from(this)
+    }
+    
     TableDisplay display(Map attributes = [:]) {
         
         TableDisplay display = new TableDisplay(this.toListMap())
