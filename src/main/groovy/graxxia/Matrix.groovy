@@ -1133,6 +1133,11 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     }
     
+    @CompileStatic Matrix minus(final Number x) { return this.minus(x.toDouble() as double) }
+    @CompileStatic Matrix plus(final Number x) { return this.plus(x.toDouble() as double) }
+    @CompileStatic Matrix multipy(final Number x) { return this.multiply(x.toDouble() as double) }
+    @CompileStatic Matrix divide(final Number x) { return this.divide(x.toDouble() as double) }
+    
     @CompileStatic
     Matrix minus(double x) {
         def result = new Matrix((Array2DRowRealMatrix)((RealMatrix)this.matrix).scalarAdd(-x))
