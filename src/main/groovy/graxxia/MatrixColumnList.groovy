@@ -28,6 +28,7 @@ class MatrixColumnList {
                 throw new IllegalArgumentException("Column ${arg[oob]} is out of bounds. Matrix has ${columns.size()} columns")
             Matrix result = new Matrix(cols as MatrixColumn[])
             columns[0].sourceMatrix.transferPropertiesToRows(result)
+            result.copyDisplaySettingsFrom(columns[0].sourceMatrix)
             return result
         }
         else
