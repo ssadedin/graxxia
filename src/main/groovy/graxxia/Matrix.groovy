@@ -46,12 +46,6 @@ import smile.data.vector.StringVector
 //import smile.data.Attribute
 //import smile.data.NumericAttribute
 
-
-@CompileStatic
-@Singleton
-class StopIteration {
-}
-
 /**
  * Wraps an Apache-Commons-Math matrix of double values and enhances
  * it with support for non-matrix columns to create an experience 
