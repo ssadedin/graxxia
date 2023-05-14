@@ -1421,6 +1421,24 @@ class MatrixTest {
       assert order2 == [2, 1, 0, 3]
       
   }
+  
+  
+  @Test
+  void 'test scalar operations non double'() {
+      
+      def x = new Matrix(a: [1,0], b: [2,3])
+      
+      def y = x + 1.0
+      
+      assert y instanceof Matrix : 'Addition of scalar did not result in Matrix'
+      
+      y = x - 1.0
+      assert y instanceof Matrix : 'Subtraction of scalar did not result in Matrix'
+      
+      y = x * 2.0
+      assert y instanceof Matrix : 'Multiplication of scalar did not result in Matrix'
+      
+  }
 
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
