@@ -47,6 +47,8 @@ dependencies {
      compile group: 'com.github.fommil.netlib', name: 'all', version: '1.1.2', ext: 'pom'
      
      implementation 'com.github.jupyter:jvm-repr:0.4.0'
+     
+     compile 'com.github.luben:zstd-jni:1.5.4-2'
 	 
 //      compile group: 'com.github.fommil', name: 'jniloader', version: '1.1'     
 
@@ -86,6 +88,12 @@ jar {
     exclude "META-INF/**/*groovy*"
     exclude "META-INF/BCKEY*"
     exclude "org/bouncycastle/**"
+    exclude "org/apache/tools/ant/**"
+    
+    // uncomment if you need these platforms
+    for(platform in ['s390x', 'ppc64', 'ppc64le', 'mips64', 'loongarch64']) {
+        exclude "**/$platform/**"
+    }
 }
 
 groovydoc {
