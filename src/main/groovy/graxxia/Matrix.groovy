@@ -1165,8 +1165,9 @@ class Matrix extends Expando implements Iterable, Serializable {
      * 
      * @param fileName
      */
+    @CompileStatic
     void save(Map options = [:], String fileName) {
-        new File(fileName).withWriter { w ->
+        FileLike.writer(fileName).withWriter { w ->
             save(options,w)
         }
     }
@@ -1211,43 +1212,6 @@ class Matrix extends Expando implements Iterable, Serializable {
         return result
     } 
     
-    static Reader createReader(fileLike) {
-        
-        if(fileLike instanceof Reader)
-            return fileLike
-        
-        boolean gzip = false
-        boolean bgzip = false
-        
-        if(fileLike instanceof String) {
-            fileLike = new File(fileLike)
-        }
-        
-        if(fileLike instanceof File) {
-            fileLike = fileLike.toPath()
-        }
-        
-        if(fileLike instanceof Path) {
-            Path path = fileLike
-            if(path.toString().endsWith('.gz'))
-                gzip = true
-            else
-            if(path.toString().endsWith('.bgz'))
-                bgzip = true
-            fileLike = Files.newInputStream(fileLike)
-        }
-        
-        if(!(fileLike instanceof InputStream))
-            throw new IllegalArgumentException("Expected object of type String, File, Path or InputStream, but was passed " + fileLike.class.name)
-        
-        if(gzip || bgzip) {
-            fileLike = new GZIPInputStream(fileLike, 128*1024)
-        }
-
-        return fileLike.newReader()
-    }
-    
-   
     @CompileStatic
     void save(Map options = [:], Writer w) {
         
@@ -1340,7 +1304,7 @@ class Matrix extends Expando implements Iterable, Serializable {
     static Matrix load(Map options = [:], String fileName) {
         List rows = new ArrayList(1024)
         
-        Reader r = createReader(fileName)
+        Reader r = FileLike.createReader(fileName)
         
         // Sniff the first line
         String firstLine = r.readLine()
@@ -1350,7 +1314,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         Closure reRead = {
             r.close()
-            r = createReader(fileName)
+            r = FileLike.createReader(fileName)
         }
 
         if(options.columnNames) {
