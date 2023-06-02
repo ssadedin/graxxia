@@ -5,6 +5,8 @@ import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
+import com.github.luben.zstd.ZstdInputStream
+
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
@@ -105,6 +107,7 @@ class FileLike {
        
         boolean gzip = false
         boolean bgzip = false
+        boolean zst = false
         
         if(fileLike instanceof String) {
             fileLike = new File(fileLike)
@@ -121,15 +124,23 @@ class FileLike {
             else
             if(path.toString().endsWith('.bgz'))
                 bgzip = true
+            else
+            if(path.toString().endsWith('.zst'))
+                zst = true
             fileLike = Files.newInputStream(fileLike)
         }
         
         if(!(fileLike instanceof InputStream))
             throw new IllegalArgumentException("Expected object of type String, File, Path or InputStream, but was passed " + fileLike.class.name)
         
-        if(gzip) {
+        if(gzip || bgzip) {
             fileLike = new GZIPInputStream((InputStream)fileLike, 128*1024)
         }
+
+        if(zst) {
+            fileLike = new ZstdInputStream((InputStream)fileLike)
+        }
+
         return (InputStream)fileLike
     } 
     
