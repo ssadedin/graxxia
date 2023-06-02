@@ -52,8 +52,6 @@ class PCAPlot extends Plot {
 
         List<String> colors = ['red','green','blue','orange','purple','gray', 'pink','magenta','maroon']
         
-        CombinedPlot c = new CombinedPlot(initHeight:1600)
-        
         def lg = new GridOutputContainerLayoutManager(2)
         OutputContainer og = new OutputContainer()
         og.layoutManager = lg
@@ -91,8 +89,6 @@ class PCAPlot extends Plot {
 
             og.addItem(p)
         }
-        //c
-        
         return og
     }
 }
