@@ -678,7 +678,7 @@ class Matrix extends Expando implements Iterable, Serializable {
             for(double [] row in matrix.dataRef) {
                 if(withDelegate)
                     delegate.row = rowIndex
-                Object rowResult = c(row)
+                Object rowResult = c(row, rowIndex)
                 def result = operation(rowIndex, row, rowResult)
                 if(result instanceof StopIteration)
                     break
