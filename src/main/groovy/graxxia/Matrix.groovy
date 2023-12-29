@@ -948,7 +948,8 @@ class Matrix extends Expando implements Iterable, Serializable {
             MatrixColumn column = col(i)
             final double mean = Stats.mean(column)
             for(int j=0; j<rows; ++j) {
-                normalised[j][i] = raw[j][i] / mean
+                if(mean != 0.0d)
+                    normalised[j][i] = raw[j][i] / mean
             }
         }
         Matrix result = new Matrix(normalised)
