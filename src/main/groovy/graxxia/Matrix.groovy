@@ -2304,8 +2304,10 @@ class Matrix extends Expando implements Iterable, Serializable {
     @CompileStatic
     Matrix standardise() {
         List<Stats> col_stats = (List<Stats>)this.columns.collect { MatrixColumn c -> Stats.from((Iterable)c) }
+        List<Double> col_means = col_stats*.mean
+        List<Double> col_stdev = col_stats*.standardDeviation
         return this.transform { double x, int i, int j ->
-            (x - col_stats[j].mean) / col_stats[j].standardDeviation
+            (x - col_means[j]) / col_stdev[j]
         }.fillna(0)
     }
     
