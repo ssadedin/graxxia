@@ -2231,6 +2231,9 @@ class Matrix extends Expando implements Iterable, Serializable {
      * @return  RandomForest, fitted to data
      */
     RandomForest forest(Map params = [:], String response) {
+        
+        
+        
        DataFrame df = this as DataFrame 
        
        List allColumns = [] 
@@ -2346,6 +2349,11 @@ class Matrix extends Expando implements Iterable, Serializable {
                     return OutputCell.DISPLAYER_HIDDEN;
                 }
             });
+    }
+    
+    @CompileStatic
+    List<Integer> getShape() {
+        [rowDimension, columnDimension]
     }
    
     /**
