@@ -5,6 +5,9 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialFunction
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction
 
 import groovy.transform.CompileStatic
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.FromString
+import groovy.transform.stc.SimpleType
 
 /**
  * Facilitates easy binning of objects based on fixed bin sizes spanning an interval
@@ -48,6 +51,25 @@ import groovy.transform.CompileStatic
  *      def binner = new Binner(3, 0, 10)
  *      def bins = objs.groupBy {
  *          binner.bin(it.foo)
+ *      }
+ *      assert bins[0].contains('cat')
+ * </pre>
+ * 
+ * There is also a built in <code>binBy</code> method that allows you to provide the object
+ * and the values to bin by, and it will call an aggregator function with the list of
+ * objects in each bin, to perform both binning and aggregation of data in each bin
+ * in the same call:
+ * 
+ * <pre> 
+ *      def objs = [
+ *          [ foo: 1, bar: 'cat'],
+ *          [ foo: 4, bar: 'tree'],
+ *          [ foo: 5, bar: 'tree'],
+ *          [ foo: 7, bar: 'house'],
+ *      ]
+ *      def binner = new Binner(3, 0, 10)
+ *      def binned = binner.binBy(objs, obs*.foo) { binnedValues ->
+ *          binnedValues*.foo.average(0)
  *      }
  *      assert bins[0].contains('cat')
  * </pre>
@@ -97,6 +119,48 @@ class Binner {
     @CompileStatic
     final double value(final int bin) {
         this.min + binSize*bin + halfBinSize
+    }
+    
+    /**
+     * Bin the given objects based on the given list of corresponding values
+     * 
+     * @param objs
+     * @param values
+     * @param aggregator
+     * @return
+     */
+    @CompileStatic
+    <T> List<Object> binBy(Iterable<T> objs, Iterable<Number> values, @ClosureParams(value=FromString, options=["List<T>", "Integer"]) Closure aggregator = null) {
+        
+        Iterator iObj = objs.iterator()
+        Iterator iVal = values.iterator()
+        
+        Map<Integer, List> grouped = [:]
+        
+        while(iVal.hasNext()) {
+            
+            Object obj = iObj.next()
+            Number val = iVal.next()
+            
+            int binIndex = this.bin(val)
+            
+            List grp = grouped[binIndex]
+            if(!grp) {
+                grp = grouped[binIndex] = []
+            }
+            grp.add(obj)
+        }
+        
+        if(aggregator == null) {
+            return (List<Object>)grouped*.value
+        }
+        
+        return grouped.collect { Integer index, List binValues ->
+            if(aggregator.maximumNumberOfParameters == 1)
+                return aggregator(binValues)
+            else
+                return aggregator(binValues, index)
+        }
     }
     
     /**
@@ -215,5 +279,9 @@ class Binner {
         }
         
         return result
+    }
+    
+    String toString() {
+        "${binCount} bins from $min to $max"
     }
 }

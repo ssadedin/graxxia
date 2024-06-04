@@ -74,4 +74,25 @@ class BinnerTest {
         assert groups[2].size() == 2
         assert groups[0]*.bar.every { it == 'cat' }
     }
+    
+    @Test
+    void testBinBy() {
+        List<Map> objs = [
+            [ foo: 1, bar: 'cat'],
+            [ foo: 4, bar: 'tree'],
+            [ foo: 2, bar: 'cat'],
+            [ foo: 9, bar: 'house'],
+            [ foo: 5, bar: 'tree'],
+            [ foo: 7, bar: 'house'],
+        ]
+
+        def binner = new Binner(3, 0, 10)
+         
+        def binned = binner.binBy(objs, objs*.foo) {
+            
+            Stats.from(it*.foo).mean
+        }
+        
+        println("Binned foos are: " + binned + "based on $binner")
+    }
 }
