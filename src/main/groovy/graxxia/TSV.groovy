@@ -167,9 +167,9 @@ class TSV implements Iterable<PropertyMapper> {
         // List or Map
         def customColumnTypes = options.columnTypes
         
-        List columnTypes = null
+        Object[] columnTypes = null
         if(customColumnTypes instanceof List)
-            columnTypes = customColumnTypes
+            columnTypes = customColumnTypes as Object[]
         
         new Iterator<PropertyMapper>() {
             @CompileStatic
@@ -185,76 +185,42 @@ class TSV implements Iterable<PropertyMapper> {
                     columnTypes = inferColumnTypes(line)
                 }
                 
-                line.values = TSV.this.convertColumns((String[])line.values, columnTypes)
+                line.values = TSVColumnConverter.convertColumns((String[])line.values, columnTypes)
                 
                 return line
             }
 
-            private List inferColumnTypes(PropertyMapper line) {
-                columnTypes = [String] * (int)((List)line.values).size()
+            private Object[] inferColumnTypes(PropertyMapper line) {
+                List cTypes = [String] * (int)((List)line.values).size()
 
                 line.values.eachWithIndex  { Object v, int index ->
                     if(customColumnTypes instanceof Map && customColumnTypes.containsKey(index))
-                        columnTypes[index] = customColumnTypes[index]
+                        cTypes[index] = customColumnTypes[index]
                     else {
                         if(v.isInteger())
-                            columnTypes[index] = Integer
+                            cTypes[index] = Integer
                         else
                         if(v.isDouble())
-                            columnTypes[index] = Double
+                            cTypes[index] = Double
                         else
                         if(v in ["true","false"])
-                            columnTypes[index] = Boolean
+                            cTypes[index] = Boolean
                         else {
                             for(f in formats) {
                                 if(f.sniff(v)) {
-                                    columnTypes[index] = f
+                                    cTypes[index] = f
                                 }
                             }
                         }
                     }
                 }
-                return columnTypes
+                return cTypes as Object[]
             }
             
             void remove() {
                 throw new UnsupportedOperationException()
             }
         }
-    }
-    
-    @CompileStatic
-    List<Object> convertColumns(String [] values, List columnTypes) {
-        List<Object> newValues = new ArrayList(values.size())
-        final int numColumns = Math.min(columnTypes.size(), values.size())
-        for(int index = 0; index<numColumns; ++index) {
-            def type = columnTypes[index]
-            try {
-                if(type instanceof Class) {
-                    if(type == Integer) {
-                        newValues[index] = Integer.parseInt(values[index])
-                    }
-                    else
-                        newValues[index] = values[index].asType((Class)type)
-                }
-                else {
-                    MatrixValueAdapter adapter = (MatrixValueAdapter)type
-                    newValues[index] = adapter.deserialize(values[index])
-                }
-            }
-            catch(NumberFormatException e) {
-                if(type.is(Integer) && values[index].isDouble()) {
-                    columnTypes[index] = Double
-                    --index
-                }
-                else { 
-                    // Ignore
-                    // This just leaves the unconverted (string) value in 
-                    // place
-                }
-            }
-        }
-        return newValues
     }
     
 	static Iterator parse(Closure c = null) {
