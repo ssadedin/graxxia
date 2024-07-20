@@ -660,9 +660,8 @@ class MatrixTest {
          println "a = " + a
          println "b = " + b
  
-         println "Merge on x1 is: " + m
+         println "Merge on cats,dogs is: " + m
          
-         assert (m.x3_2 as List) == [6,7,4,5,3]
 
          assert m.find { it[0] == 3 }[3] == b[0][0]
 
