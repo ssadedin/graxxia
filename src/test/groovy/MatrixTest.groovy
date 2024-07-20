@@ -662,8 +662,9 @@ class MatrixTest {
  
          println "Merge on cats,dogs is: " + m
          
+         println(m.find { it[0] == 3 }[0][3])
 
-         assert m.find { it[0] == 3 }[3] == b[0][0]
+         assert m.find { it[0] == 3 }[0][3] == b[1][0]
 
       }
     
