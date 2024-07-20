@@ -607,6 +607,67 @@ class MatrixTest {
         assert u[2] == [2,4,6]
     } 
     
+    @Test
+    void testMergeOnDataValue() {
+       
+        def a = new Matrix(x1: [5,2,1,4,3], 
+                           x2: [2,4,2,5,10], 
+                           x3: [7,6,5,4,3])
+        
+        
+        a.cats = ['milly','megsy','fluffy','simpson','rags']
+
+        def b = new Matrix(x1: [1,2,3,4,5], 
+                           x2: [2,4,2,8,10], 
+                           x3: [7,6,5,4,3])
+        
+        b.dogs = ['fluffy','rags','milly','simpson','megsy']
+
+        def m = a.mergeWith(b) { x1 }
+        
+        println "a = " + a
+        println "b = " + b
+
+        println "Merge on x1 is: " + m
+        
+        assert (m.x3_2 as List) == [6,7,4,5,3]
+        assert m.cats[m.findIndexOf { x1_1 == 5 }] == 'milly'
+        assert m.cats[m.findIndexOf { x1_1 == 4 }] == 'simpson'
+        
+        assert m.dogs[m.findIndexOf { x1_1 == 5 }] == 'megsy'
+        assert m.dogs[m.findIndexOf { x1_1 == 4 }] == 'simpson'
+     }
+     
+     
+     @Test
+     void testMergeOnNonDataValue() {
+        
+         def a = new Matrix(x1: [5,2,1,4,3],
+                            x2: [2,4,2,5,10],
+                            x3: [7,6,5,4,3])
+         
+         
+         a.cats = ['milly','megsy','fluffy','simpson','rags']
+ 
+         def b = new Matrix(x1: [1,2,3,4,5],
+                            x2: [2,4,2,8,10],
+                            x3: [7,6,5,4,3])
+         
+         b.dogs = ['fluffy','rags','milly','simpson','megsy']
+ 
+         def m = a.mergeWith(b, { cats  }, { dogs })
+         
+         println "a = " + a
+         println "b = " + b
+ 
+         println "Merge on x1 is: " + m
+         
+         assert (m.x3_2 as List) == [6,7,4,5,3]
+
+         assert m.find { it[0] == 3 }[3] == b[0][0]
+
+      }
+    
     /*
      * what is the right form for aggregate?
      */

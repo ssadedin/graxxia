@@ -2355,6 +2355,93 @@ class Matrix extends Expando implements Iterable, Serializable {
     List<Integer> getShape() {
         [rowDimension, columnDimension]
     }
+    
+    /**
+     * Merge this matrix with the other on the value returned by closure c applied to each row. Internally,
+     * uses a hash join algorithm to compute a key and match rows together based on the result.
+     * 
+     * Example of usage:
+     * <pre>
+     * x = new Matrix(a: [1,2,3], b:[4,5,6])
+     * y = new Matrix(a: [3,1,2], b:[4,5,6])
+     * 
+     * // Join the two matrices on the a column:
+     * z = x.mergeWith(y) { a }
+     * </pre>
+     * 
+     * @param other
+     * @param c
+     * @return
+     */
+    @CompileStatic
+    Matrix mergeWith(final Matrix other, @ClosureParams(value=SimpleType.class,options="double[]") Closure c1, @ClosureParams(value=SimpleType.class,options="double[]") Closure c2=null) {
+        
+        if(c2 == null)
+            c2 = c1
+        
+        HashMap<Object, MergeRow> results = new HashMap((int)(Math.max(this.rowDimension, other.rowDimension)*1.5))
+        
+        final int newColumnDimension = this.columnDimension + other.columnDimension
+        final int myColumnDimension = this.columnDimension
+        final int otherColumnDimension = other.columnDimension
+        final List<Map.Entry<String,List>> myProps = (List<Map.Entry<String,List>>)this.getProperties().entrySet().collect { it}
+        final List<Map.Entry<String,List>> otherProps = (List<Map.Entry<String,List>>)other.getProperties().entrySet().collect { it }
+        final int totalProps = myProps.size() + otherProps.size()
+        final int numMyProps = myProps.size()
+
+        // implement hash merge based on result of closure c on each row
+        this.iterateRowsWithDelegate(c1) { int rowIndex, double []row, Object rowResult ->
+            MergeRow newRow = new MergeRow(newColumnDimension, myProps.size() + otherProps.size())
+            System.arraycopy(row, 0, newRow.row, 0, myColumnDimension)
+            
+            for(int i=0; i<numMyProps; ++i) {
+                newRow.propValues[i] = myProps[i].value[rowIndex]
+            }
+            
+            results[rowResult] = newRow
+        }
+        
+        other.iterateRowsWithDelegate(c2) { int rowIndex, double []row, Object rowResult ->
+            MergeRow newRow = results[rowResult]
+            if(newRow == null) {
+                newRow = new MergeRow(newColumnDimension, myProps.size() + otherProps.size())
+            }
+            System.arraycopy(row, 0, newRow.row, myColumnDimension, otherColumnDimension)
+            
+            for(int i=0; i<otherProps.size(); ++i) {
+                newRow.propValues[i+numMyProps] = otherProps[i].value[rowIndex]
+            }
+             
+            results[rowResult] = newRow
+        }
+        
+        Map<String,List> resultProps = (myProps*.key + otherProps*.key).collectEntries {
+            [ it, new ArrayList(results.size())]
+        }
+
+        double[][] resultData = new double[results.size()][]
+        int i = 0
+        for(MergeRow row : results.values()) {
+            resultData[i++] = row.row
+            // add each property value to end of corresponding propperty
+            println(resultProps)
+            resultProps.eachWithIndex { Map.Entry<String,List> e, int index ->
+                e.value.add(row.propValues[index])
+            }
+        }
+       
+        final Matrix finalResult = new Matrix(resultData)
+        if(this.@names && other.@names) {
+            
+            // If there is a clash of column names, suffix all the names to make them distinct
+            if(this.@names.any { it in other.@names })
+                finalResult.@names = this.@names.collect { it + '_1' }  + other.@names.collect { it + '_2' }
+        }
+        
+        resultProps.each { finalResult[it.key] = it.value }
+        
+        return finalResult
+    }
    
     /**
      * Return smile attributes for this matrix
@@ -2367,4 +2454,15 @@ class Matrix extends Expando implements Iterable, Serializable {
 //        else
 //            return this.columnDimension.collect { 'V' + it }.collect { new NumericAttribute(it) } as Attribute[]
 //    }
+}
+
+@CompileStatic
+class MergeRow {
+    
+    MergeRow(int columnDimension, int numProps) {
+        this.row = new double[columnDimension]
+        this.propValues = new Object[numProps]
+    }
+    Object [] propValues
+    double [] row
 }
