@@ -157,6 +157,25 @@ class TSVTest {
 
        TSV.save(lm, 'test.default.csv')
     }
+    
+    @Test
+    void 'custom column types to force integers to Strings'() {
+       def lm = [
+           [dog: 1, cat: 'brown'],
+           [dog: 2, cat: 'green'],
+           [dog: 9, cat: 'funky'],
+       ] 
+       
+       TSV.save(lm, 'test.tsv')
+       
+       def rowsInt = new TSV('test.tsv').toListMap()
+       
+       assert rowsInt[0].dog instanceof Integer
+       
+       def rowsString = new TSV('test.tsv', columnTypes: [ dog: String]).toListMap() 
+       assert rowsString[0].dog instanceof String
+
+    }
 
     Reader toTsv(List values) {
         new StringReader(values*.join("\t").join("\n").trim().stripIndent())

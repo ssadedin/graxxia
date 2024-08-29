@@ -170,7 +170,7 @@ class TSV implements Iterable<PropertyMapper> {
         Object[] columnTypes = null
         if(customColumnTypes instanceof List)
             columnTypes = customColumnTypes as Object[]
-        
+       
         new Iterator<PropertyMapper>() {
             @CompileStatic
             boolean hasNext() {
@@ -190,8 +190,24 @@ class TSV implements Iterable<PropertyMapper> {
                 return line
             }
 
+            /**
+             * Flexibly inference column types, respecting any that are specified
+             * by the user explicitly via the columnTypes mapping.
+             * 
+             * @param line  line to infer types from
+             * @return  list of classes representing column target types
+             */
             private Object[] inferColumnTypes(PropertyMapper line) {
                 List cTypes = [String] * (int)((List)line.values).size()
+
+                // for any keys that are Strings, convert them to equivalent integer index of column
+                if(customColumnTypes instanceof Map) {
+                    customColumnTypes = customColumnTypes.collectEntries { e ->
+                        if(e.key instanceof String && line.columns.containsKey(e.key)) {
+                            return [  line.columns[e.key], e.value]
+                        }
+                    }
+                }
 
                 line.values.eachWithIndex  { Object v, int index ->
                     if(customColumnTypes instanceof Map && customColumnTypes.containsKey(index))
