@@ -61,6 +61,8 @@ class BoxPlot {
             
             List labels = props.remove('labels')
             
+            List tooltips = props.remove('toolTip')
+            
             Plot p = new Plot(xTickLabelsVisible: false, *:props)
             
             Color color = new Color(java.awt.Color.decode(BeakerX.plotColors[0]).RGB)
@@ -95,6 +97,7 @@ class BoxPlot {
             
             Color outlierColor = new Color(new java.awt.Color(color.RGB).brighter().RGB)
             
+            // Draw outliers
             [max,upperOutliers].transpose().eachWithIndex { maxAndCol, i ->
                 def (maxValue,col) = maxAndCol
                 def outliers = col
@@ -113,7 +116,11 @@ class BoxPlot {
             
             allStats.eachWithIndex { stats, i ->
                 def medianBase = stats.getPercentile(48)
-                p << new Bars(x: [i], base: medianBase, y: [medianBase+range*0.03], width: barWidth, color: outlierColor)
+                Map medianProps = [x: [i], base: medianBase, y: [medianBase+range*0.03], width: barWidth, color: outlierColor]
+                if(tooltips) {
+                    medianProps.toolTip = [tooltips[i]]
+                }
+                p << new Bars(medianProps)
             }
             
             if(labels) {
