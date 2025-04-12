@@ -25,9 +25,11 @@ println "Building for Groovy $GROOVY_VERSION"
 println "*"*80
 
 dependencies {
-     implementation "org.codehaus.groovy:groovy-all:$GROOVY_VERSION"
-     implementation group: 'org.codehaus.groovy', name: 'groovy', version: "$GROOVY_VERSION"
-     implementation group: 'org.codehaus.groovy', name: 'groovy-cli-commons', version: "$GROOVY_VERSION"
+     compileOnly group: 'org.codehaus.groovy', name: 'groovy', version: "$GROOVY_VERSION"
+     compileOnly group: 'org.codehaus.groovy', name: 'groovy-sql', version: "$GROOVY_VERSION"
+     compileOnly group: 'org.codehaus.groovy', name: 'groovy-cli-commons', version: "$GROOVY_VERSION"
+     compileOnly group: 'org.codehaus.groovy', name: 'groovy-json', version: "$GROOVY_VERSION"
+
      implementation 'org.apache.commons:commons-math3:3.5'
 
      implementation group: 'com.github.haifengl', name: 'smile-core', version: SMILE_VERSION
@@ -65,7 +67,9 @@ dependencies {
 
 // Bundle all dependencies into output library
 jar {
-    from configurations.compile.grep { 
+    duplicatesStrategy = DuplicatesStrategy.WARN
+
+    from configurations.runtimeClasspath.grep { 
         !it.name.endsWith('.pom') &&
         !it.name.startsWith("cramtools") && 
         !it.name.contains('log4j') &&
