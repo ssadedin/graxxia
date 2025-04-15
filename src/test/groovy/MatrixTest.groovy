@@ -1500,6 +1500,27 @@ class MatrixTest {
       assert y instanceof Matrix : 'Multiplication of scalar did not result in Matrix'
       
   }
+  
+  @Test
+  void testBadVectorConversion() {
+      Matrix m = new Matrix(
+                [
+                    a: [1,2,4],
+                    b: [2,null,8]
+                ]
+                )
+                
+      boolean excepted = false              
+      try {
+         def v = m.vector("b")     
+      }
+      catch(IllegalArgumentException e) {
+          excepted = true
+      }
+      
+      assert excepted : "Expected IllegalArgumentException when null value converted to vector"
+  }
+
 
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]

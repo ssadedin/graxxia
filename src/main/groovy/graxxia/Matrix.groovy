@@ -2201,19 +2201,25 @@ class Matrix extends Expando implements Iterable, Serializable {
         if(columnName in this.userColumns*.key) {
             
             def values = this[columnName]
-            if(values[0] instanceof Double) 
-                return DoubleVector.of(columnName, this.getAt(columnName) as double[])
-            else
-            if(values[0] instanceof String) 
-                return StringVector.of(columnName, *values)
-            else
-            if(values[0] instanceof Integer)  
-                return IntVector.of(columnName, *values)
-            else
-            if(values[0] instanceof Boolean)  
-                return BooleanVector.of(columnName, *values)
-            else
-                throw new IllegalArgumentException("Column $columnName of type ${values[0].class} is of an unsupported type to convert to vector")
+            
+            try {
+                if(values[0] instanceof Double) 
+                    return DoubleVector.of(columnName, this.getAt(columnName) as double[])
+                else
+                if(values[0] instanceof String) 
+                    return StringVector.of(columnName, *values)
+                else
+                if(values[0] instanceof Integer)  
+                    return IntVector.of(columnName, *values)
+                else
+                if(values[0] instanceof Boolean)  
+                    return BooleanVector.of(columnName, *values)
+                else
+                    throw new IllegalArgumentException("Column $columnName of type ${values[0].class} is of an unsupported type to convert to vector")
+            }
+            catch(NullPointerException ex) {
+                throw new IllegalArgumentException("Column $columnName of type ${values[0]?.class} could not be converted to vector form. Check its values and type are non-null and valid.")
+            }
         }
         else
             throw new IllegalArgumentException("Column $columnName is not known in this matrix (candidate columns are: ${this.@names}, ${this.properties*.key.join(',')}")
