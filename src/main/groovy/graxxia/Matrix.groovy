@@ -2207,13 +2207,13 @@ class Matrix extends Expando implements Iterable, Serializable {
                     return DoubleVector.of(columnName, this.getAt(columnName) as double[])
                 else
                 if(values[0] instanceof String) 
-                    return StringVector.of(columnName, *values)
+                    return StringVector.of(columnName, values as String[])
                 else
                 if(values[0] instanceof Integer)  
-                    return IntVector.of(columnName, *values)
+                    return IntVector.of(columnName, values as int[])
                 else
                 if(values[0] instanceof Boolean)  
-                    return BooleanVector.of(columnName, *values)
+                    return BooleanVector.of(columnName, values as boolean[])
                 else
                     throw new IllegalArgumentException("Column $columnName of type ${values[0].class} is of an unsupported type to convert to vector")
             }
