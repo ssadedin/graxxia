@@ -2448,6 +2448,18 @@ class Matrix extends Expando implements Iterable, Serializable {
         
         return finalResult
     }
+    
+    /**
+     * Shuffle the rows of this matrix to random order and return the result
+     * @return
+     */
+    @CompileStatic
+    Matrix shuffle(Long seed = null) {
+        Random rnd = seed ? new Random(seed) : new Random()
+        List<Integer> indices = new ArrayList(0..<this.rowDimension)
+        indices.shuffle(rnd)
+        return (Matrix)this.getAt(indices)
+    }
    
     /**
      * Return smile attributes for this matrix
