@@ -729,7 +729,7 @@ class Matrix extends Expando implements Iterable, Serializable {
         this.iterateRowsWithDelegate(c) { int index, double [] row, Object rowResult ->
             if(rowResult) {
                 result = index
-                return StopIteration.instance
+                return StopIteration.theInstance
             }
         }
         return result
