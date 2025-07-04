@@ -121,6 +121,81 @@ class Binner {
         this.min + binSize*bin + halfBinSize
     }
     
+    
+    /**
+     * Bin the given objects based on a closure that returns the value. The map returns
+     * contains midpoints of the bins as keys and lists of objects as values
+     * 
+     * @param objs  objects to bin
+     * @param valueFn   function to compute binned value from object
+     * @return  a sparse Map with keys representing the midpoint of each bin
+     */
+    @CompileStatic
+    <T> Map<Number, List> binBy(Iterable<T> objs, @ClosureParams(value=FromString, options=["T"]) Closure<Number> valueFn = null) {
+        
+        Iterator<T> iObj = objs.iterator()
+        
+        Map<Integer, List> grouped = [:]
+        
+        while(iObj.hasNext()) {
+            
+            T obj = iObj.next()
+            Number val = valueFn(obj)
+            
+            int binIndex = this.bin(val)
+            
+            List grp = grouped[binIndex]
+            if(!grp) {
+                grp = grouped[binIndex] = []
+            }
+            grp.add(obj)
+        }
+        
+        return (Map<Number,List>)grouped.collectEntries {
+            [
+                this.value(it.key),
+                it.value
+            ]
+        }
+    }
+    
+    /**
+     * Count the number of objects mapping to each bin, based on return values from the given closure
+     * 
+     * @param objs  objects to bin
+     * @param valueFn   function to compute binned value from object
+     * @return  a sparse Map with keys representing the midpoint of each bin (note: values never observed will not have an entry)
+     */
+    @CompileStatic
+    <T> Map<Number, Integer> countBy(Iterable<T> objs, @ClosureParams(value=FromString, options=["T"]) Closure<Number> valueFn = null) {
+        
+        Iterator<T> iObj = objs.iterator()
+        
+        Map<Integer, Integer> grouped = [:]
+        
+        while(iObj.hasNext()) {
+            
+            T obj = iObj.next()
+            Number val = valueFn(obj)
+            
+            int binIndex = this.bin(val)
+            if(grouped.containsKey(binIndex)) {
+                ++grouped[binIndex]
+            }
+            else {
+                grouped[binIndex] = 0
+            }
+        }
+        
+        return  (Map<Number,Integer>)grouped.collectEntries {
+            [
+                this.value(it.key),
+                it.value
+            ]
+        }
+    }
+    
+    
     /**
      * Bin the given objects based on the given list of corresponding values
      * 
