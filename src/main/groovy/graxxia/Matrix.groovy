@@ -2233,7 +2233,9 @@ class Matrix extends Expando implements Iterable, Serializable {
      *                  documented Smile parameters, eg: max_depth, max_nodes (see Smile 
      *                  <a href='https://github.com/haifengl/smile/blob/master/core/src/main/java/smile/classification/RandomForest.java#L182'>RandomForest docs</a> 
      *                  for valid values)
-     * @param response  String value specifying the name of the column to treat as the response
+     * @param response  String value specifying the name of the column to treat as the response. This
+     *                  column should be of integer type. If it is not already of int type, an attempt will
+     *                  be made to convert it to integer type.
      * @return  RandomForest, fitted to data
      */
     RandomForest forest(Map params = [:], String response) {
@@ -2258,6 +2260,23 @@ class Matrix extends Expando implements Iterable, Serializable {
        }
            
        List predictors = allColumns.grep { it != response }
+       
+       // Smile seems to only support Int type for the response, so if it isn't
+       // already an int, we attempt to convert to that
+       try {
+           def intVector = df.intVector(response)
+       }
+       catch(UnsupportedOperationException uoe) {
+           if(response in this.userColumns*.key) {
+               responseVector = IntVector.of(response, this.getUserColumns().find { it.key == response }.value as int[])
+           }
+           else {
+               int columnIndex = this.@names.indexOf(response)
+               responseVector = IntVector.of(response, this.getColumns()[columnIndex] as int[])
+           }
+           
+           df = DataFrame.of(responseVector).merge(df.select(*predictors))
+       }
        
        Formula formula = Formula.of(response, *predictors)
        
