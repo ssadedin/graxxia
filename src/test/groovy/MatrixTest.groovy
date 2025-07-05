@@ -1521,6 +1521,38 @@ class MatrixTest {
       assert excepted : "Expected IllegalArgumentException when null value converted to vector"
   }
 
+  
+  /*
+  @Test
+  void bugForest() {
+      Matrix m = Matrix.load('test_matrix.tsv')
+      
+      m = m[1..1000]
+      
+//      m.is_true = m.collect { depth > 10 ? 0d : 1d }
+      
+      println m
+      
+      def f = m.forest('depth')
+  }
+  */
+
+  @Test 
+  void testShuffle() {
+      
+      Matrix m = new Matrix([a: [1,2,3,4], b:[8,6,2,9], c: [9,10,11,12]])
+      
+      println "Original Matrix:\n$m"
+      
+      Matrix shuffled = m.shuffle()
+      
+      println "Shuffled:\n$shuffled"
+      
+      shuffled = m.shuffle(99)
+
+      println "Shuffled with seed:\n$shuffled"
+
+  }
 
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
