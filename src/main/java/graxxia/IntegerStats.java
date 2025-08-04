@@ -138,7 +138,7 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
         }
         else 
         if(obj instanceof String) {
-            addValue(Integer.parseInt(String.valueOf(obj).trim()));
+            addValue((int)Double.parseDouble(String.valueOf(obj).trim()));
         }
         else 
         if(obj instanceof Number) {
