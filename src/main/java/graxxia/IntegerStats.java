@@ -147,32 +147,33 @@ public class IntegerStats extends SummaryStatistics implements Serializable {
      }
     
     /**
-     * Count the given coverage value in calculating the median
-     * @param coverage
+     * Include the given value in the value distribution
+     * 
+     * @param value
      */
-    public void addValue(int coverage) {
-        if(coverage>=values.length)
+    public void addValue(final int value) {
+        if(value>=values.length)
             ++values[values.length-1];
         else
-            ++values[coverage];
+            ++values[value];
         
-        super.addValue(coverage);
+        super.addValue(value);
         ++total;
     }
     
-    public void addIntValue(int coverage) {
-        if(coverage>=values.length)
+    public void addIntValue(final int value) {
+        if(value>=values.length)
             ++values[values.length-1];
         else
-            ++values[coverage];
+            ++values[value];
         
-        super.addValue(coverage);
+        super.addValue(value);
         ++total;
     }
   
     
     /**
-     * Return the specified percentile from the observed coverage counts
+     * Return the specified percentile from the observed value counts
      * eg: for median, getPercentile(50).
      * 
      * @return the specified percentile, if it is smaller than the max value passed in the
