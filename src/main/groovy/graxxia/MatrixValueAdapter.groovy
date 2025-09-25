@@ -37,6 +37,16 @@ interface MatrixValueAdapter<T> {
      */
     T deserialize(Object obj) throws ParseException
 }
+ 
+class UTCDateMatrixValueAdapter extends DateMatrixValueAdapter {
+    
+    UTCDateMatrixValueAdapter() {
+        // Create a formatter that understands an ISO8601 timezone indicator ("X")
+        this.format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+        // Indicate that input is in UTC
+        this.format.setTimeZone(TimeZone.getTimeZone("UTC"))
+    }
+}
 
 @CompileStatic
 class NumberMatrixValueAdapter implements MatrixValueAdapter<Number> {
@@ -78,32 +88,32 @@ class StringMatrixValueAdapter implements MatrixValueAdapter<Object> {
 }
 
 class DateMatrixValueAdapter implements MatrixValueAdapter<Date> {
+    protected SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+    DateMatrixValueAdapter() {
+        // Default to local time zone
+        format.setTimeZone(TimeZone.getDefault())
+    }
     
     @Override
     public boolean sniff(Object value) {
-        
-        if(value instanceof Date)
+        if (value instanceof Date)
             return true
-        
-        if(!(value instanceof String))
+        if (!(value instanceof String))
             return false
-            
         try {
-            format.parse(value)
+            format.parse(String.valueOf(value))
             return true
-        } 
-        catch (ParseException|NumberFormatException|ArrayIndexOutOfBoundsException ex) {
+        } catch (ParseException e) {
             return false
         }
     }
-
+    
     @Override
     public String serialize(Date obj) {
-        return format.format(obj);
+        return format.format(obj)
     }
-
+    
     @Override
     public Date deserialize(Object obj) throws ParseException {
         return format.parse(String.valueOf(obj))
