@@ -87,7 +87,7 @@ class TSV implements Iterable<PropertyMapper> {
     
     Map options
     
-    public static List<MatrixValueAdapter> formats = [ new DateMatrixValueAdapter()]
+    public static List<MatrixValueAdapter> formats = [ new UTCDateMatrixValueAdapter(), new DateMatrixValueAdapter()]
     
     TSV(Map options=[:], File file) {
         this(options, file.absolutePath)
@@ -225,6 +225,7 @@ class TSV implements Iterable<PropertyMapper> {
                             for(f in formats) {
                                 if(f.sniff(v)) {
                                     cTypes[index] = f
+                                    break
                                 }
                             }
                         }
