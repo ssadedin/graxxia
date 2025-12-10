@@ -1553,6 +1553,16 @@ class MatrixTest {
       println "Shuffled with seed:\n$shuffled"
 
   }
+  
+  @Test
+  void testInitFromArray() {
+      def x = [1,2,3,4,5,6,7,8,9] as double[]
+      
+      def m = new Matrix(3,3,x)
+      
+      assert m[2][2] == 9
+      
+  }
 
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
