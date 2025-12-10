@@ -2087,9 +2087,9 @@ class Matrix extends Expando implements Iterable, Serializable {
         result.@metadata.basis =  basis
         result.@names = (1..numComponents).collect { 'PC' + it }
         
-        // The result will have rows corresponding to the origional matrix, so we 
+        // The result will have rows corresponding to the original matrix, so we 
         // can transfer metadata across
-        this.transferPropertiesToRows(this)
+        this.transferPropertiesToRows(result)
         return result
     }
     
