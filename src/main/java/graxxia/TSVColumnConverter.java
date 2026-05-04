@@ -55,10 +55,8 @@ public class TSVColumnConverter
                     columnTypes[index] = Double.class;
                     --index;
                 }
-                else { 
-                    // Ignore
-                    // This just leaves the unconverted (string) value in 
-                    // place
+                else {
+                    newValues.add(values[index]);
                 }
             }
         }
