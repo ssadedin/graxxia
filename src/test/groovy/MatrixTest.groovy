@@ -1564,6 +1564,170 @@ class MatrixTest {
       
   }
 
+  /**
+   * Creates a matrix with a controlled low-rank structure: n rows built from
+   * k latent factors with strongly decreasing weights, plus a small amount
+   * of independent noise. The leading k singular values are well separated
+   * from the noise floor, so the leading singular vectors are stable and can
+   * be compared between different SVD implementations.
+   */
+  private Matrix createLowRankTestMatrix(int rows, int cols, int k, long seed = 98765L) {
+        Random rnd = new Random(seed)
+        double[][] factors = new double[k][cols]
+        for(int i=0; i<k; ++i)
+            for(int j=0; j<cols; ++j)
+                factors[i][j] = rnd.nextGaussian()
+
+        double[][] data = new double[rows][cols]
+        for(int i=0; i<rows; ++i) {
+            for(int c=0; c<k; ++c) {
+                double weight = (c + 1) * 10 + rnd.nextGaussian()
+                for(int j=0; j<cols; ++j)
+                    data[i][j] += weight * factors[c][j]
+            }
+            for(int j=0; j<cols; ++j)
+                data[i][j] += 0.5d * rnd.nextGaussian()
+        }
+        return new Matrix(data)
+  }
+
+  @Test
+  void reduceLargeAgreesWithReduceOnProjections() {
+      Matrix m = createLowRankTestMatrix(150, 60, 3)
+
+      Matrix reduced = m.reduce(3)
+      Matrix reducedLarge = m.reduceLarge(3)
+
+      assert reduced.columnDimension == 3
+      assert reducedLarge.columnDimension == 3
+      assert reducedLarge.rowDimension == 150
+
+      double maxMagnitude = 0d
+      for(int c=0; c<3; ++c) {
+          List colReduce = reduced[][c] as List
+          List colReduceLarge = reducedLarge[][c] as List
+
+          // Singular vector signs are arbitrary, so align them before comparing
+          double dot = 0d
+          double normA = 0d, normB = 0d
+          for(int i=0; i<colReduce.size(); ++i) {
+              double a = (double) colReduce[i]
+              double b = (double) colReduceLarge[i]
+              dot += a*b
+              normA += a*a
+              normB += b*b
+          }
+          if(dot < 0)
+              normB = -normB   // flip sign to align
+
+          maxMagnitude = Math.max(maxMagnitude, Math.sqrt(normA))
+          double error = 0d
+          for(int i=0; i<colReduce.size(); ++i) {
+              double a = (double) colReduce[i]
+              double b = (double) colReduceLarge[i]
+              if(dot < 0) b = -b
+              error = Math.max(error, Math.abs(a - b))
+          }
+
+          // float32 approximation: expect agreement to well below 1e-3 of the
+          // largest projection magnitude
+          assert error < 1e-3d * maxMagnitude : "Component $c projections differ by $error"
+      }
+  }
+
+  @Test
+  void reduceLargeAgreesWithReduceOnLoadings() {
+      Matrix m = createLowRankTestMatrix(150, 60, 3)
+
+      Matrix reduced = m.reduce(3)
+      Matrix reducedLarge = m.reduceLarge(3)
+
+      List loadingsReduce = reduced.@metadata.loadings
+      List loadingsLarge = reducedLarge.@metadata.loadings
+
+      assert loadingsReduce.size() == 3
+      assert loadingsLarge.size() == 3
+
+      for(int i=0; i<3; ++i) {
+          double a = (double) loadingsReduce[i]
+          double b = (double) loadingsLarge[i]
+          assert b != 0d
+          double relativeError = Math.abs(a - b) / a
+          assert relativeError < 1e-3d : "Loading $i: $a vs $b (relative error $relativeError)"
+      }
+  }
+
+  @Test
+  void reduceLargeAgreesWithReduceOnBasis() {
+      Matrix m = createLowRankTestMatrix(150, 60, 3)
+
+      Matrix reduced = m.reduce(3)
+      Matrix reducedLarge = m.reduceLarge(3)
+
+      Matrix basisReduce = reduced.@metadata.basis
+      Matrix basisLarge = reducedLarge.@metadata.basis
+
+      assert basisReduce.rowDimension == 3
+      assert basisLarge.rowDimension == 3
+
+      // Corresponding basis vectors should be parallel to each other
+      for(int i=0; i<3; ++i) {
+          double dot = 0d
+          for(int j=0; j<m.columnDimension; ++j)
+              dot += basisReduce[i][j] * basisLarge[i][j]
+          assert Math.abs(dot) > 0.9999d : "Basis vector $i dot product with original = $dot"
+      }
+  }
+
+  @Test
+  void reduceLargeBasisIsOrthonormal() {
+      Matrix m = createLowRankTestMatrix(150, 60, 3)
+      Matrix reducedLarge = m.reduceLarge(3)
+
+      Matrix basis = reducedLarge.@metadata.basis
+      for(int i=0; i<3; ++i) {
+          for(int j=0; j<3; ++j) {
+              double dot = 0d
+              for(int c=0; c<m.columnDimension; ++c)
+                  dot += basis[i][c] * basis[j][c]
+              double expected = (i == j) ? 1d : 0d
+              assert Math.abs(dot - expected) < 1e-3d : "Basis vectors $i,$j dot = $dot"
+          }
+      }
+  }
+
+  @Test
+  void reduceLargeProducesPCNames() {
+      Matrix m = createLowRankTestMatrix(150, 60, 3)
+      Matrix reducedLarge = m.reduceLarge(3)
+
+      assert reducedLarge.names == ['PC1','PC2','PC3']
+  }
+
+  @Test
+  void reduceLargeReproducibleWithFixedSeed() {
+      Matrix m = createLowRankTestMatrix(150, 60, 3)
+
+      Matrix a = m.reduceLarge(seed: 12345L, 3)
+      Matrix b = m.reduceLarge(seed: 12345L, 3)
+
+      for(int c=0; c<3; ++c) {
+          List colA = a[][c] as List
+          List colB = b[][c] as List
+          for(int i=0; i<colA.size(); ++i)
+              assert Math.abs((double)colA[i] - (double)colB[i]) < 1e-9d
+      }
+  }
+
+  @Test
+  void reduceLargeRejectsTooManyComponents() {
+      Matrix m = createLowRankTestMatrix(10, 5, 2)
+
+      assertThrows(IllegalArgumentException) {
+          m.reduceLarge(6)
+      }
+  }
+
   private Matrix createRandomCorrelatedTestMatrix(int rows=10) {
         double[][] data = new double[rows][4]
         for(int i=0; i<rows; ++i) {

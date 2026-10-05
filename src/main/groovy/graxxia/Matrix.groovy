@@ -2070,6 +2070,82 @@ class Matrix extends Expando implements Iterable, Serializable {
      * @return a n x numComponents Matrix object where n is the original row dimension of this
      *         matrix, with metadata carrying the loadings and basis of the PCA outputs
      */
+    /**
+     * Perform dimensionality reduction like {@link #reduce(int)} but using
+     * an algorithm that scales to very wide matrices (hundreds of thousands
+     * of columns).
+     * <p>
+     * The classical SVD used by reduce() requires working memory proportional
+     * to p<sup>2</sup> (where p is the number of columns), which makes it
+     * impossible for high dimensional data: at p = 100,000 the right singular
+     * vectors alone are 80 GB. This method instead uses the randomized SVD
+     * algorithm (Halko et al. 2011, see {@link RandomizedSVD}), which never
+     * forms any p x p structure and works in O((n+p) * (k + oversampling))
+     * memory. In addition, the data is downcast to 32-bit floats for the
+     * decomposition, halving the memory cost of the working copy.
+     * <p>
+     * The result is approximate (though typically accurate to several decimal
+     * places for the leading components) and - unless a fixed seed is supplied
+     * via the options - varies slightly from run to run.
+     *
+     * @param numComponents  number of principal components to compute
+     * @param options        optional parameters:
+     *      <ul>
+     *        <li><b>oversampling</b> - extra dimensions in the random sketch (default 10)</li>
+     *        <li><b>powerIterations</b> - number of power iterations to sharpen the
+     *            sketch; increase for matrices with slowly decaying spectra (default 2)</li>
+     *        <li><b>seed</b> - seed for the random projection; fix to make results
+     *            reproducible (default 42)</li>
+     *      </ul>
+     * @return an n x numComponents Matrix with the same metadata contract as
+     *         {@link #reduce(int)}
+     */
+    @CompileStatic
+    Matrix reduceLarge(int numComponents) {
+        reduceLarge([:], numComponents)
+    }
+
+    @CompileStatic
+    Matrix reduceLarge(Map options, int numComponents) {
+        int oversampling = (options.oversampling ?: 10) as int
+        int powerIterations = (options.powerIterations ?: 2) as int
+        long seed = (options.seed ?: 42L) as long
+
+        int n = this.matrix.rowDimension
+        int p = this.matrix.columnDimension
+
+        // Downcast to a flat float32 copy for the decomposition. This is the
+        // only full-size working structure; everything else is O((n+p)*k).
+        double[][] sourceData = this.matrix.dataRef
+        float[] flatData = new float[n * p]
+        for (int i = 0; i < n; ++i) {
+            double[] row = sourceData[i]
+            int offset = i * p
+            for (int j = 0; j < p; ++j)
+                flatData[offset + j] = (float) row[j]
+        }
+
+        RandomizedSVD svd = RandomizedSVD.decompose(
+            flatData, n, p, numComponents, oversampling, powerIterations, seed
+        )
+
+        Matrix basis = new Matrix(svd.vt)
+
+        List<Double> loading = (0..<numComponents).collect { int c ->
+            Math.sqrt(svd.singularValues[c])
+        }
+
+        Matrix result = this.multiply(basis.transpose())
+        result.@metadata.loadings = loading
+        result.@metadata.basis = basis
+        result.@names = (1..numComponents).collect { 'PC' + it }
+
+        // The result will have rows corresponding to the original matrix, so we
+        // can transfer metadata across
+        this.transferPropertiesToRows(result)
+        return result
+    }
+
     @CompileStatic
     Matrix reduce(int numComponents) {
         EJMLPCA pca = new EJMLPCA(this)

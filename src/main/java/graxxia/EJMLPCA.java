@@ -27,7 +27,7 @@ public class EJMLPCA {
     /**
      * Mean values of each element across all the samples
      */
-    double mean[];
+    double[] mean;
     
     DMatrixRMaj W;
 
